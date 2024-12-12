@@ -1,0 +1,78 @@
+{
+    // please change the following paths to your own paths
+    "path_to_data": ".\\spikeInfo.mat", // path to spikeInfo.mat
+    "output_folder": ".\\kilomatchOutput", // output folder
+    "path_to_python": ".\\anaconda3\\envs\\py310\\python.exe", // path to python (3.9+) which has scikit-learn installed
+
+    // parameters for estimating the location of each unit
+    "spikeLocation":{
+       "location_algorithm": "monopolar_triangulation", // "monopolar_triangulation" or "center_of_mass"
+        "n_nearest_channels": 20 // number of channels used for spike location estimation
+    },
+    
+    // parameters for waveform correction
+    "waveformCorrection":{
+        "interpolate_algorithm": "Krig", // "Krig", "Raw", "Nearest", "IDW"
+        "n_nearest_channels": 36, // number of channels used for similarity calculation
+        "n_channels_precomputed": 100 // precomputed the corrected waveforms for acceleration
+    },
+
+    // PC similarity related parameters
+    "PC_similarity":{
+        "n_nearest_channels": 36, // number of channels used for similarity calculation
+        "n_PCs": 6, // number of PCs used for similarity calculation
+        "n_channels_precomputed": 100 // precomputed the PC features for acceleration
+    },
+
+    // autocorrelogram similarity related parameters
+    "autoCorr":{
+        "window": 50 // ms
+    },
+
+    // ISI similarity related parameters
+    "ISI":{
+        "window": 100, // ms
+        "binwidth": 1, // ms
+        "gaussian_sigma": 5 // ms, for smoothing the ISI histogram
+    },
+
+    // parameters for motion estimation
+    "motionEstimation":{
+        "max_motion_distance": 80, // um. Unit pairs with distance larger than this value will not be included for motion estimation
+        "similarity_threshold": 2.7, // atanh() transform of the correlation coefficient
+        "n_block": 1 // 1 for rigid motion estimation
+    },
+
+    // parameters for clustering
+    "clustering":{
+        "max_distance": 40 // um. Unit pairs with distance larger than this value will be considered as different clusters
+    },
+
+    // parameters for curating the clusters
+    "autoCuration":{
+        "merge_threshold": 1.8, // atanh() transform of the correlation coefficient
+        "reject_threshold": 0.1 // atanh() transform of the correlation coefficient. Good clusters should have all pair-wise similarity larger than this threshold
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
