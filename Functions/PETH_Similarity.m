@@ -1,5 +1,10 @@
-function similarity = PETH_Similarity(pethA, pethB)
-temp = corrcoef(pethA, pethB);
+function similarity = PETH_Similarity(spikeInfoA, spikeInfoB)
+if ~isfield(spikeInfoA, 'PETH')
+    similarity = NaN;
+    return
+end
+
+temp = corrcoef(spikeInfoA.PETH, spikeInfoB.PETH);
 similarity = atanh(temp(1,2));
 
 if isnan(similarity)
