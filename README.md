@@ -20,10 +20,11 @@ pip install scikit-learn
 - The data should be an 1 x n struct array named `spikeInfo` with the following fields:
     - `SessionIndex`: 1 x 1 int scalar indicating the session. It should start from 1 and be coninuous without any gaps.
     - `SpikeTimes`: 1 x n double array in millisecond.
-    - `Waveform`: a n_channel x n_sample matrix of the mean waveform. All units should share the same channels.
+    - `Waveform`: a n_channel x n_sample matrix of the mean waveform in uV. All units should share the same channels.
     - `Xcoords`: a n_channel x 1 double array of the x coordinates of each channel.
     - `Ycoords`: a n_channel x 1 double array of the y coordinates (depth) of each channel.
     - `Kcoords`: a n_channel x 1 double array of the shank index of each channel (not used so far).
+    - `PETH`: optional, a 1 x n double array of the peri-event time histogram. Used for validation.
 
 - The data should be saved in a `.mat` file and specified in the `settings.json`.
 
@@ -46,7 +47,7 @@ pip install scikit-learn
 
 ## Notes
 
-- The code is still under development and fundamental changes may occur.
+- The project is still under development and fundamental changes may occur.
 - The parameters may need to be adjusted for different datasets.
 - Please raise an issue if you meet any bugs or have any questions.
 
