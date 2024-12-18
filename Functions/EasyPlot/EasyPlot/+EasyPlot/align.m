@@ -74,7 +74,7 @@ function align(axes_all, reference, position)
         end
     
         idx_side = EasyPlot.Utils.getSideAxes(axes_all, position);
-        dx = out-axes_all{idx_side}.Position(1)-axes_all.Position(3);
+        dx = out-axes_all{idx_side}.Position(1)-axes_all{idx_side}.Position(3);
         dy = 0;
     elseif strcmpi(position, 'top')
         out = reference.Position(2)+reference.Position(4);
@@ -85,7 +85,7 @@ function align(axes_all, reference, position)
     
         idx_side = EasyPlot.Utils.getSideAxes(axes_all, position);
         dx = 0;
-        dy = out-axes_all{idx_side}.Position(2)-axes_all.Position(4);
+        dy = out-axes_all{idx_side}.Position(2)-axes_all{idx_side}.Position(4);
     elseif strcmpi(position, 'bottom')
         out = reference.Position(2);
         if ~iscell(axes_all)
