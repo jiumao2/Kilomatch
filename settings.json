@@ -26,7 +26,8 @@
 
     // autocorrelogram similarity related parameters
     "autoCorr":{
-        "window": 50 // ms
+        "window": 50, // ms
+        "gaussian_sigma": 5 // ms, for smoothing the autocorrelogram
     },
 
     // ISI similarity related parameters

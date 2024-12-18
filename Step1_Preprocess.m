@@ -1,10 +1,30 @@
 %% load the data
+fprintf('Loading %s...\n', user_settings.path_to_data);
 load(user_settings.path_to_data);
+
+% make a folder to store the data
+if ~exist(fullfile(user_settings.output_folder), 'dir')
+    mkdir(fullfile(user_settings.output_folder));
+end
+fprintf('The output will be saved to %s!\n', user_settings.output_folder);
+
+% make a folder to store the figures
+if ~exist(fullfile(user_settings.output_folder, 'Figures'), 'dir')
+    mkdir(fullfile(user_settings.output_folder, 'Figures'));
+end
 
 %% validate the data
 n_session = max([spikeInfo.SessionIndex]);
 if n_session ~= length(unique([spikeInfo.SessionIndex]))
     error('SessionIndex should start from 1 and be coninuous without any gaps!');
+end
+
+% check PETH
+if ~isfield(spikeInfo(1), 'PETH')
+    disp('PETH not found in SpikeInfo! Filled with zeros instead!');
+    for k = 1:length(spikeInfo)
+        spikeInfo(k).PETH = zeros(1, 5);
+    end
 end
 
 %% preprocessing data
@@ -32,6 +52,9 @@ for k = 1:length(spikeInfo)
     
     [auto_corr, lag] = xcorr(s, s, window);
     auto_corr(lag==0)=0;
+    auto_corr(lag>0) = smoothdata(auto_corr(lag>0), 'gaussian', 5*user_settings.autoCorr.gaussian_sigma);
+    auto_corr(lag<0) = smoothdata(auto_corr(lag<0), 'gaussian', 5*user_settings.autoCorr.gaussian_sigma);
+    auto_corr = auto_corr./max(auto_corr);
     
     spikeInfo(k).AutoCorr = auto_corr;
 
@@ -49,16 +72,6 @@ for k = 1:length(spikeInfo)
         toc;
         fprintf('%d / %d done!\n', k, length(spikeInfo));
     end
-end
-
-% make a folder to store the data
-if ~exist(fullfile(user_settings.output_folder), 'dir')
-    mkdir(fullfile(user_settings.output_folder));
-end
-
-% make a folder to store the figures
-if ~exist(fullfile(user_settings.output_folder, 'Figures'), 'dir')
-    mkdir(fullfile(user_settings.output_folder, 'Figures'));
 end
 
 % Save the preprocessed data

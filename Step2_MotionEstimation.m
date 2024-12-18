@@ -43,6 +43,8 @@ save(fullfile(user_settings.output_folder, 'SimilarityForCorretion.mat'), 'simil
 similarity_thres = user_settings.motionEstimation.similarity_threshold;
 nblock = user_settings.motionEstimation.n_block;
 
+n_pairs_included = sum(similarity>similarity_thres);
+
 fig = EasyPlot.figure();
 ax_similarity = EasyPlot.axes(fig,...
     'Width', 3,...
@@ -56,6 +58,7 @@ xlabel(ax_similarity, 'Waveform similarity');
 ylabel(ax_similarity, 'Prob.');
 
 histogram(ax_similarity, similarity, 'BinWidth', 0.2, 'Normalization', 'probability');
+title(ax_similarity, [num2str(n_pairs_included), ' pairs are included']);
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/SimilarityThresholdForCorrection'));
 

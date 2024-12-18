@@ -7,7 +7,7 @@ reject_thres = user_settings.autoCuration.reject_threshold;
 % remove bad units in the cluster if any similarity == 0
 n_cluster = max(idx_cluster_hdbscan);
 fprintf('%d clusters and %d pairs before removing bad units!\n',...
-    n_cluster, sum(hdbscan_matrix(:)));
+    n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
 
 for k = 1:n_cluster
     units = find(idx_cluster_hdbscan == k);
@@ -73,7 +73,7 @@ end
 hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
 
 fprintf('%d clusters and %d pairs after removing bad units!\n',...
-    n_cluster, sum(hdbscan_matrix(:)));
+    n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
 
 % merge when two or more adjacent clusters are similar and do not contain units from the same sessions
 
@@ -159,9 +159,6 @@ while flag
     [~, cluster_id_sorted] = sort(cluster_centers);
 end
 
-fprintf('%d clusters and %d pairs after merging good clusters!\n',...
-    n_cluster, sum(hdbscan_matrix(:)));
-
 % update hdbscan matrix
 hdbscan_matrix = zeros(size(similarity_matrix));
 for k = 1:n_cluster
@@ -174,6 +171,9 @@ for k = 1:n_cluster
     end
 end
 hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
+
+fprintf('%d clusters and %d pairs after merging good clusters!\n',...
+    n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
 
 %% find possible pairings for unpaired units
 disp('Checking the unpaired units!');
@@ -253,7 +253,8 @@ for k = 1:n_cluster
 end
 hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
 
-
+fprintf('%d clusters and %d pairs after merging good unpaired units!\n',...
+    n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
 end
 
 

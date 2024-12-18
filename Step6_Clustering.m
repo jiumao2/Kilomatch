@@ -4,7 +4,8 @@ sessions = [spikeInfo.SessionIndex];
 n_session = max(sessions);
 similarity_matrix = zeros(n_unit);
 
-mean_similarity = mean([similarity_waveform, similarity_PC], 2);
+% mean_similarity = mean([similarity_waveform, similarity_PC], 2);
+mean_similarity = similarity_waveform;
 for k = 1:size(idx_unit_pairs, 1)
     similarity_matrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = mean_similarity(k);
     similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
@@ -86,7 +87,7 @@ h = EasyPlot.colorbar(ax_all{2},...
 EasyPlot.setXLim(ax_all, [0.5, length(leafOrder)+0.5]);
 EasyPlot.setYLim(ax_all, [0.5, length(leafOrder)+0.5]);
 title(ax_all{1}, 'HDBSCAN');
-title(ax_all{2}, 'Hierarchical clustering');
+title(ax_all{2}, 'Similarity matrix');
 
 linkaxes([ax_all{1}, ax_all{2}]);
 
