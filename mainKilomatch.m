@@ -6,9 +6,9 @@ addpath(path_kilomatch);
 addpath(genpath(fullfile(path_kilomatch, 'Functions')));
 
 user_settings = jsonc.jsoncDecode(fileread(path_settings));
-
 tic;
 
+%% Kilomatch
 Step1_Preprocess;
 Step2_MotionEstimation;
 Step3_ComputePC_Features;

@@ -1,8 +1,15 @@
 % Estimating the motion of the electrode
 disp('---------------Motion Estimation---------------');
 
+n_unit = length(spikeInfo);
+sessions = [spikeInfo.SessionIndex];
+n_session = max(sessions);
+
 % Reserve memory for the variables
-similarity = zeros(1e7, 1);
+similarity_waveform = zeros(1e7, 1);
+similarity_ISI = zeros(1e7, 1);
+similarity_AutoCorr = zeros(1e7, 1);
+similarity_PETH = zeros(1e7, 1);
 idx_unit_pairs = zeros(1e7, 2);
 
 count = 0;
@@ -21,9 +28,12 @@ for k = 1:length(spikeInfo)
         
         count = count+1;
 
-        similarity(count) = waveformSimilarity(spikeInfo(k), spikeInfo(j),...
+        similarity_waveform(count) = waveformSimilarity(spikeInfo(k), spikeInfo(j),...
             user_settings.waveformCorrection.n_nearest_channels,...
             user_settings.waveformCorrection.interpolate_algorithm);
+        similarity_ISI(count) = ISI_Similarity(spikeInfo(k), spikeInfo(j));
+        similarity_AutoCorr(count) = autocorrelogramSimilarity(spikeInfo(k), spikeInfo(j));
+        similarity_PETH(count) = PETH_Similarity(spikeInfo(k), spikeInfo(j));
 
         idx_unit_pairs(count,:) = [k,j];
     end
@@ -34,16 +44,110 @@ for k = 1:length(spikeInfo)
     end
 end
 
-similarity = similarity(1:count);
+similarity_waveform = similarity_waveform(1:count);
+similarity_ISI = similarity_ISI(1:count);
+similarity_AutoCorr = similarity_AutoCorr(1:count);
+similarity_PETH = similarity_PETH(1:count);
 idx_unit_pairs = idx_unit_pairs(1:count,:);
 
 % save the similarity
-save(fullfile(user_settings.output_folder, 'SimilarityForCorretion.mat'), 'similarity', 'idx_unit_pairs');
+save(fullfile(user_settings.output_folder, 'SimilarityForCorretion.mat'),...
+    'similarity_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH', 'idx_unit_pairs');
 
-similarity_thres = user_settings.motionEstimation.similarity_threshold;
-nblock = user_settings.motionEstimation.n_block;
+%% Pre-clustering
+names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};
+similarity_all = [similarity_waveform, similarity_ISI, similarity_AutoCorr, similarity_PETH];
 
-n_pairs_included = sum(similarity>similarity_thres);
+similarity_names = user_settings.motionEstimation.features;
+idx_names = zeros(1, length(similarity_names));
+for k = 1:length(similarity_names)
+    idx_names{k} = find(strcmpi(names_all, similarity_names{k}));
+end
+similarity_all = similarity_all(:, idx_names);
+
+weights = ones(1, length(similarity_names))./length(similarity_names);
+mean_similarity = sum(similarity_all.*weights, 2);
+
+for k = 1:size(idx_unit_pairs, 1)
+    similarity_matrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = mean_similarity(k);
+    similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
+end
+similarity_matrix(eye(size(similarity_matrix)) == 1) = 5;
+%
+for iter = 1:user_settings.motionEstimation.n_iter
+    fprintf('Iteration %d starts!\n', iter);
+
+    % HDBSCAN
+    distance_matrix = 1./(1 + tanh(similarity_matrix));
+    
+    HDBSCAB_settings.min_samples = 2; % The number of samples in a neighborhood for a point to be considered as a core point.
+    % This includes the point itself. When None, defaults to min_cluster_size.
+    HDBSCAB_settings.cluster_selection_epsilon = 0; % A distance threshold. 
+    % Clusters below this value will be merged. This is the minimum epsilon allowed.
+    
+    HDBSCAB_settings.min_cluster_size = 2;
+    HDBSCAB_settings.max_cluster_size = n_session;
+    HDBSCAB_settings.metric = 'precomputed';
+    HDBSCAB_settings.data_folder = user_settings.output_folder;
+    
+    json_text = jsonencode(HDBSCAB_settings);
+    
+    writelines(json_text, fullfile(user_settings.output_folder, 'HDBSCAN_settings.json'));
+    writeNPY(distance_matrix, fullfile(user_settings.output_folder, 'DistanceMatrix.npy'));
+    
+    system([fullfile(user_settings.path_to_python), ' ',...
+        fullfile(path_kilomatch, 'Functions/hdbscan.py'), ' ',...
+        fullfile(user_settings.output_folder, 'HDBSCAN_settings.json')]);
+    
+    idx_cluster_hdbscan = double(readNPY(fullfile(user_settings.output_folder, 'ClusterIndices.npy')));
+    % MATLAB starts from 1
+    idx_cluster_hdbscan(idx_cluster_hdbscan >= 0) = idx_cluster_hdbscan(idx_cluster_hdbscan >= 0)+1;
+    
+    n_cluster = max(idx_cluster_hdbscan);
+    hdbscan_matrix = zeros(size(similarity_matrix));
+    for k = 1:n_cluster
+        idx = find(idx_cluster_hdbscan == k);
+        for j = 1:length(idx)
+            for i = j+1:length(idx)
+                hdbscan_matrix(idx(j), idx(i)) = 1;
+                hdbscan_matrix(idx(i), idx(j)) = 1;
+            end
+        end
+    end
+    
+    hdbscan_matrix(eye(n_unit) == 1) = 1;
+    is_matched = arrayfun(@(x)hdbscan_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:length(mean_similarity));
+
+    if iter ~= user_settings.motionEstimation.n_iter        
+        % LDA and update weights
+        mdl = fitcdiscr(similarity_all, is_matched);
+        temp = (mdl.Coeffs(1,2).Linear)';
+        weights = temp./sum(temp);
+        disp('Weights:');
+        disp(strjoin(similarity_names, '   '));
+        disp(weights);
+        
+        % update the similarity matrix
+        mean_similarity = sum(similarity_all.*weights, 2);
+        similarity_matrix = zeros(n_unit);
+        for k = 1:size(idx_unit_pairs, 1)
+            similarity_matrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = mean_similarity(k);
+            similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
+        end
+        similarity_matrix(eye(size(similarity_matrix)) == 1) = 5;
+    end
+end
+
+similarity = sum(similarity_all.*weights, 2);
+edges = 0:0.01:5;
+hist_matched = histcounts(similarity(is_matched == 1), edges, 'Normalization', 'probability');
+hist_unmatched = histcounts(similarity(is_matched == 0), edges, 'Normalization', 'probability');
+hist_diff = hist_matched - hist_unmatched;
+idx_crossed = find(sign(hist_diff) > 0, 1);
+similarity_thres = edges(idx_crossed);
+
+idx_good = find(similarity' > similarity_thres & is_matched == 1);
+n_pairs_included = length(idx_good);
 
 fig = EasyPlot.figure();
 ax_similarity = EasyPlot.axes(fig,...
@@ -62,9 +166,10 @@ title(ax_similarity, [num2str(n_pairs_included), ' pairs are included']);
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/SimilarityThresholdForCorrection'));
 
-fprintf('%d pairs of units are included for drift estimation!\n', sum(similarity>similarity_thres));
+fprintf('%d pairs of units are included for drift estimation!\n', n_pairs_included);
 
 %% compute drift
+nblock = user_settings.motionEstimation.n_block;
 n_session = max([spikeInfo.SessionIndex]);
 session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_unit_pairs(:,2)).SessionIndex]'];
 
@@ -73,7 +178,6 @@ depth = [];
 dx = [];
 idx_1 = [];
 idx_2 = [];
-idx_good = find(similarity > similarity_thres);
 for k = 1:length(idx_good)
     unit1 = idx_unit_pairs(idx_good(k), 1);
     unit2 = idx_unit_pairs(idx_good(k), 2);
@@ -99,6 +203,7 @@ for k = 1:nblock
     idx_2_block = idx_2(idx_block == k);
 
     if length(unique([idx_1_block, idx_2_block])) ~= n_session
+        disp('Some sessions are not included! Motion estimation failed!');
         continue
     end
 
@@ -208,8 +313,6 @@ end
 
 plot(ax_distance, depth, dx, '.', 'Color', colors(1,:));
 plot(ax_distance, depth, dx_left, '.', 'Color', colors(2,:));
-
-% xline(ax_distance, d_edges, 'k:', 'LineWidth', 2);
 
 xlabel(ax_distance, 'Depth (um)');
 ylabel(ax_distance, 'Residues (um)');
