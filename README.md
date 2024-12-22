@@ -5,6 +5,7 @@
 ## Installation
 
 - Download the code from the [Kilomatch](https://github.com/jiumao2/Kilomatch)
+- MATLAB with at least `Statistics and Machine Learning Toolbox` installed. The development is based on MATLAB R2022b.
 - Python 3.9 or later with `scikit-learn` package installed.
 
 ```shell
@@ -27,28 +28,50 @@ pip install scikit-learn
     - `PETH`: optional, a 1 x n double array of the peri-event time histogram. Used for validation.
 
 - The data should be saved in a `.mat` file and specified in the `settings.json`.
+- Edit the `settings.json` file to specify the `path_to_data`, `output_folder` and `path_to_python`.
+- Edit the other parameters in the `settings.json` file to suit your data.
 
 ### Run the code
 
-- Update the `settings.json` file to specify the `path_to_data`, `output_folder` and `path_to_python`.
-- Edit the path to `settings.json` in `mainKilomatch.m` and run.
+- Edit the `path_kilomatch` and `path_settings` in `mainKilomatch.m` and run.
 
-### Check the results
+### About the output
 
-- The results will be saved in the `output_folder` as `Output.mat`.
-- The `Output.mat` will contain the following fields:
-    - `SessionIndex`: 1 x n double array of the session index.
-    - `UnitIndex`: 1 x n double array of the unit index.
-    - `ClusterIndex`: 1 x n double array of the cluster index.
-    - `Waveform`: a n_channel x n_sample x n_unit matrix of the mean waveform.
-    - `Xcoords`: a n_channel x 1 double array of the x coordinates of each channel.
-    - `Ycoords`: a n_channel x 1 double array of the y coordinates (depth) of each channel.
-    - `Kcoords`: a n_channel x 1 double array of the shank index of each channel (not used so far).
+- All the temporary files, results, and figures will be saved in the `output_folder` specified in the `settings.json` file.
+- The results will be saved in the `output_folder` as `Output.mat`, which will contain the following fields:
+    - `NumUnits`: 1 x 1 int scalar of the number of units included in the analysis.
+    - `NumSession`: 1 x 1 int scalar of the number of sessions included in the analysis.
+    - `Sessions`: 1 x n_unit int array of the session index for each unit.
+    - `Params`: a struct of the parameters used in the analysis.
+    - `Locations`: a n_unit x 3 double array of the estimated x, y, and z coordinates of each unit.
+
+    - `NumClusters`: 1 x 1 int scalar of the number of clusters found (each cluster has at least 2 units).
+    - `IdxCluster`: 1 x n_unit int array of the cluster index for each unit. `IdxCluster = -1` means the unit is not assigned to any cluster.
+    - `ClusterMatrix`: a n_unit x n_unit logical matrix of the cluster assignment. `ClusterMatrix(i,j) = 1` means unit `i` and `j` are in the same cluster.
+    - `MatchedPairs`: a n_pairs x 2 int matrix of the unit index for each pair of units in the same cluster.  
+    - `IdxSort`: a 1 x n_unit int array of the sorted index of the units computed from hierarchical clustering algorithm.
+
+    - `SimilarityNames`: a 1 x n_features cell of the names of the similarity metrics used in the analysis.
+    - `SimilarityAll`: a n_pairs x n_features double matrix of the similarity between each pair of units. The pairs can be found in `SimilarityPairs`.
+    - `SimilarityPairs`: a n_pairs x 2 int matrix of the unit index for each pair of units.
+    - `SimilarityWeights`: a 1 x n_features double array of the weights of the similarity metrics computed from IHDBSCAN algorithm.
+    - `SimilarityThreshold`: a 1 x 1 double of the threshold which is used to determine the good matches in `GoodMatchesMatrix` used in auto-curation algorithm.
+    - `GoodMatchesMatrix`: a n_unit x n_unit logical matrix of the good matches determined by `SimilarityThreshold`. `GoodMatchesMatrix(i,j) = 1` means unit `i` and `j` is a good match.
+    - `SimilarityMatrix`: a n_unit x n_unit double matrix of the weighted sum of the similarity between each pair of units.
+    
+    - `DistanceMatrix`: a n_unit x n_unit double matrix of the distance between each pair of units.
+    - `WaveformSimilarityMatrix`: a n_unit x n_unit double matrix of the waveform similarity between each pair of units.
+    - `RawWaveformSimilarityMatrix`: a n_unit x n_unit double matrix of the raw (uncorrected) waveform similarity between each pair of units.
+    - `ISI_SimilarityMatrix`: a n_unit x n_unit double matrix of the ISI similarity between each pair of units.
+    - `AutoCorrSimilalrityMatrix`: a n_unit x n_unit double matrix of the autocorrelogram similarity between each pair of units.
+    - `PETH_SimilarityMatrix`: a n_unit x n_unit double matrix of the PETH similarity between each pair of units.
+
+    - `Motion`: a 1 x n_session double array of the positions of the electrode in each session.
+    - `Nblock`: a 1 x 1 int scalar of the number of blocks used in the motion correction.
 
 ## Notes
 
 - The project is still under development and fundamental changes may occur.
-- The parameters may need to be adjusted for different datasets.
 - Please raise an issue if you meet any bugs or have any questions.
 
 ## References
