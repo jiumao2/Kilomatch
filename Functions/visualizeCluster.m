@@ -1,4 +1,4 @@
-function visualizeCluster(Output, cluster_id, spikeInfo, waveformsAll, PC_all, user_settings)
+function visualizeCluster(Output, cluster_id, spikeInfo, waveformsAll, user_settings)
 % (1) Positions on the probe vs. sessions
 % (2) Overlapped waveforms
 % (3) ISI, AutoCorr, PC, PETH
@@ -15,9 +15,6 @@ colors = winter(length(units));
 
 waveforms = waveformsAll.waveforms(units,:,:);
 waveform_channels = waveformsAll.waveform_channels(units,:);
-
-PC_features = PC_all.PC_features_corrected(units,:,:);
-PC_channels = PC_all.PC_channels(units,:);
 
 ISI = cat(1, spikeInfo(units).ISI);
 AutoCorr = cat(1, spikeInfo(units).AutoCorr);
@@ -59,14 +56,10 @@ distance_to_location = sqrt(sum((channel_locations - channel_locations(ch,:)).^2
 ch_included = idx_sort(1:n_channels);
 
 waveforms_plot = zeros(length(units), n_channels, n_samples);
-PC_features_plot = zeros(length(units), n_channels, size(PC_features, 3));
 for k = 1:length(units)
     for j = 1:n_channels
         idx = waveform_channels(k,:) == ch_included(j);
         waveforms_plot(k,j,:) = waveforms(k, idx, :);
-        
-        idx = PC_channels(k,:) == ch_included(j);
-        PC_features_plot(k,j,:) = PC_features(k, idx, :);
     end
 end
 
@@ -113,28 +106,30 @@ EasyPlot.move(h_scalebar, 'dx', 1);
 
 % similarity
 overlaps = {...
+    [],...
     squeeze(waveforms_plot(:,1,:)),...
-    reshape(permute(PC_features_plot,[3,2,1]), [], length(units))',...
     ISI,...
     AutoCorr,...
     PETH};
 similarity_matrix = {...
+    Output.SimilarityMatrix(units, units),...
     Output.WaveformSimilarityMatrix(units, units),...
-    Output.PC_SimilarityMatrix(units, units),...
     Output.ISI_SimilarityMatrix(units, units),...
     Output.AutoCorrSimilalrityMatrix(units, units),...
     Output.PETH_SimilarityMatrix(units, units),...
     };
 
-similarity_names = {'Waveform', 'PC', 'ISI', 'Auto correlogram', 'PETH'};
+similarity_names = ['Weighted sum', Output.SimilarityNames];
 
 ax_similarity = EasyPlot.createGridAxes(fig, 2, length(similarity_names),...
     'Width', 3,...
     'Height', 3,...
     'MarginLeft', 1,...
     'MarginBottom', 1);
+
 EasyPlot.place(ax_similarity, ax_depth, 'right');
 EasyPlot.align(ax_similarity, ax_depth, 'top');
+
 
 EasyPlot.set(ax_similarity(2,:),...
     'Color', [0.7,0.7,0.7]);
@@ -143,11 +138,19 @@ for k = 1:length(ax_similarity)
     similarity_matrix{k}(eye(size(similarity_matrix{k})) == 1) = NaN;
     
     for j = 1:size(overlaps{k}, 1)
-        plot(ax_similarity{1,k}, 1:size(overlaps{k},2), overlaps{k}(j,:), '-', 'Color', colors(j,:));
+        if k > 1
+            plot(ax_similarity{1,k}, 1:size(overlaps{k},2), overlaps{k}(j,:), '-', 'Color', colors(j,:));
+        end
     end
 
     imagesc(ax_similarity{2,k}, similarity_matrix{k}, 'AlphaData', ~isnan(similarity_matrix{k}));
     title(ax_similarity{1,k}, similarity_names{k});
+
+    if k == 1
+        title(ax_similarity{2,k}, similarity_names{k});
+    else
+        title(ax_similarity{2,k}, ['weight = ', num2str(Output.SimilarityWeights(k-1), '%.3f')]);
+    end
 end
 
 EasyPlot.setXLim(ax_similarity(2,:), [0.5, length(units)+0.5]);
@@ -160,37 +163,37 @@ EasyPlot.yticklabels(ax_similarity(2,:), '');
 xlabel(ax_similarity{2,1}, 'Units (sorted by sessions)');
 
 % 2D scatter
-similarity_all = {Output.WaveformSimilarityMatrix,...
-    Output.PC_SimilarityMatrix,...
-    Output.ISI_SimilarityMatrix,...
-    Output.AutoCorrSimilalrityMatrix,...
-    Output.PETH_SimilarityMatrix};
-similarity_names = {'Waveform', 'PC', 'ISI', 'Auto correlogram', 'PETH'};
+similarity_all = Output.SimilarityAll;
+similarity_names = {'Waveform', 'ISI', 'Auto correlogram', 'PETH'};
 similarity_matched = cell(1, length(similarity_names));
 similarity_unmatched = cell(1, length(similarity_names));
 similarity_this = cell(1, length(similarity_names));
 
+is_matched = arrayfun(@(x)Output.ClusterMatrix(Output.SimilarityPairs(x,1), Output.SimilarityPairs(x,2)), 1:size(similarity_all,1));
+idx_matched = find(is_matched == 1);
+idx_unmatched = find(is_matched == 0);
+
+temp_matrix = zeros(Output.NumUnits);
+temp_matrix(units, units) = 1;
+is_this_cluster = arrayfun(@(x)temp_matrix(Output.SimilarityPairs(x,1), Output.SimilarityPairs(x,2)), 1:size(similarity_all,1));
+idx_this_cluster = find(is_this_cluster == 1);
+
+similarity = sum(Output.SimilarityAll.*Output.SimilarityWeights, 2);
+histogram(ax_similarity{1,1}, similarity(idx_unmatched), 'FaceColor', 'k', 'BinWidth', 0.2, 'Normalization', 'probability');
+histogram(ax_similarity{1,1}, similarity(idx_matched), 'FaceColor', 'b', 'BinWidth', 0.2, 'Normalization', 'probability');
+plot(ax_similarity{1,1}, similarity(idx_this_cluster), zeros(length(idx_this_cluster), 1), 'g.', 'MarkerSize', 3);
+
 for k = 1:length(similarity_names)
-    sim_this = similarity_all{k};
-    
-    idx_matrix = 1:Output.NumUnits^2;
-    idx_row = ceil(idx_matrix./Output.NumUnits);
-    idx_col = mod(idx_matrix-1, Output.NumUnits) + 1;
-
-    idx_matched = intersect(find(~isnan(sim_this) & Output.ClusterMatrix), find(idx_col > idx_row));
-    idx_unmatched = intersect(find(~isnan(sim_this) & ~Output.ClusterMatrix), find(idx_col > idx_row));
-    
-    similarity_matched{k} = sim_this(idx_matched);
-    similarity_unmatched{k} = sim_this(idx_unmatched); 
-
-    temp_matrix = sim_this(units, units);
-    idx_matrix = 1:length(units)^2;
-    idx_row = ceil(idx_matrix./length(units));
-    idx_col = mod(idx_matrix-1, length(units)) + 1;
-    similarity_this{k} = temp_matrix(idx_col > idx_row);
+    similarity_matched{k} = similarity_all(idx_matched,k);
+    similarity_unmatched{k} = similarity_all(idx_unmatched,k);
+    similarity_this{k} = similarity_all(idx_this_cluster,k);
 end
 
-idx_scatter = {[1,3], [1,5], [3,5]};
+idx_scatter = cell(1, length(similarity_names) - 1);
+for k = 1:length(idx_scatter)
+    idx_scatter{k} = [1, k+1];
+end
+
 ax_scatter = EasyPlot.createGridAxes(fig, 1, length(idx_scatter),...
     'Width', 4,...
     'Height', 4,...
@@ -247,6 +250,5 @@ if ~exist(fullfile(user_settings.output_folder, 'Figures/Clusters/'), 'dir')
     mkdir(fullfile(user_settings.output_folder, 'Figures/Clusters/'));
 end
 EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Clusters', ['Cluster', num2str(cluster_id)]));
-% EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Clusters', ['Cluster', num2str(cluster_id)]), 'type', 'pdf');
 
 end

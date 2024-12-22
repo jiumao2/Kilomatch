@@ -83,27 +83,18 @@ xlim(ax_motion, [0.5, n_session+0.5]);
 xlabel(ax_session, 'Sessions');
 
 %
-similarity_all = {Output.WaveformSimilarityMatrix,...
-    Output.PC_SimilarityMatrix,...
-    Output.ISI_SimilarityMatrix,...
-    Output.AutoCorrSimilalrityMatrix,...
-    Output.PETH_SimilarityMatrix};
-similarity_names = {'Waveform', 'PC', 'ISI', 'Auto correlogram', 'PETH'};
+similarity_all = [sum(Output.SimilarityAll.*Output.SimilarityWeights, 2), Output.SimilarityAll];
+similarity_names = ['Weighted sum', Output.SimilarityNames];
 similarity_matched = cell(1, length(similarity_names));
 similarity_unmatched = cell(1, length(similarity_names));
 
-for k = 1:length(similarity_names)
-    sim_this = similarity_all{k};
-    
-    idx_matrix = 1:Output.NumUnits^2;
-    idx_row = ceil(idx_matrix./Output.NumUnits);
-    idx_col = mod(idx_matrix-1, Output.NumUnits) + 1;
+is_matched = arrayfun(@(x)Output.ClusterMatrix(Output.SimilarityPairs(x,1), Output.SimilarityPairs(x,2)), 1:size(similarity_all,1));
+idx_matched = find(is_matched == 1);
+idx_unmatched = find(is_matched == 0);
 
-    idx_matched = intersect(find(~isnan(sim_this) & Output.ClusterMatrix), find(idx_col > idx_row));
-    idx_unmatched = intersect(find(~isnan(sim_this) & ~Output.ClusterMatrix), find(idx_col > idx_row));
-    
-    similarity_matched{k} = sim_this(idx_matched);
-    similarity_unmatched{k} = sim_this(idx_unmatched); 
+for k = 1:length(similarity_names)
+    similarity_matched{k} = similarity_all(idx_matched,k);
+    similarity_unmatched{k} = similarity_all(idx_unmatched,k);
 end
 
 ax_hist = EasyPlot.createGridAxes(fig, 1, length(similarity_names),...
@@ -119,6 +110,10 @@ for k = 1:length(ax_hist)
     histogram(ax_hist{k}, similarity_unmatched{k}, 'FaceColor', 'k', 'BinWidth', 0.2, 'Normalization', 'probability');
     histogram(ax_hist{k}, similarity_matched{k}, 'FaceColor', 'b', 'BinWidth', 0.2, 'Normalization', 'probability');
     xlabel(ax_hist{k}, similarity_names{k});
+
+    if k > 1
+        title(ax_hist{k}, ['weight = ', num2str(Output.SimilarityWeights(k-1), '%.3f')]);
+    end
 end
 
 ylabel(ax_hist{1}, 'Probability');
@@ -126,7 +121,11 @@ EasyPlot.setYLim(ax_hist);
 EasyPlot.setYLim(ax_hist, [0, ax_hist{1}.YLim(2)]);
 
 % scatter
-idx_scatter = {[1,3], [1,5], [3,5]};
+idx_scatter = cell(length(similarity_names) - 2, 1);
+for k = 1:length(idx_scatter)
+    idx_scatter{k} = [2, k+2];
+end
+
 ax_scatter = EasyPlot.createGridAxes(fig, 1, length(idx_scatter),...
     'Width', 3,...
     'Height', 3,...
@@ -287,9 +286,9 @@ EasyPlot.move(ax_colormap, 'dx', 1.5);
 n_unit_cumsum = cumsum(n_units_each_session);
 
 imagesc(ax_colormap{1,1}, 1- Output.ClusterMatrix(idx_sort_session, idx_sort_session));
-imagesc(ax_colormap{1,2}, Output.SimilarMatrix(idx_sort_session, idx_sort_session));
+imagesc(ax_colormap{1,2}, Output.SimilarityMatrix(idx_sort_session, idx_sort_session));
 imagesc(ax_colormap{2,1}, 1 - Output.ClusterMatrix(Output.IdxSort, Output.IdxSort));
-imagesc(ax_colormap{2,2}, Output.SimilarMatrix(Output.IdxSort, Output.IdxSort));
+imagesc(ax_colormap{2,2}, Output.SimilarityMatrix(Output.IdxSort, Output.IdxSort));
 
 EasyPlot.colormap(ax_colormap(:,1), 'gray');
 
