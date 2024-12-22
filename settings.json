@@ -17,13 +17,6 @@
         "n_channels_precomputed": 100 // precomputed the corrected waveforms for acceleration
     },
 
-    // PC similarity related parameters
-    "PC_similarity":{
-        "n_nearest_channels": 36, // number of channels used for similarity calculation
-        "n_PCs": 6, // number of PCs used for similarity calculation
-        "n_channels_precomputed": 100 // precomputed the PC features for acceleration
-    },
-
     // autocorrelogram similarity related parameters
     "autoCorr":{
         "window": 50, // ms

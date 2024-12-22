@@ -11,12 +11,11 @@ tic;
 %% Kilomatch
 Step1_Preprocess;
 Step2_MotionEstimation;
-Step3_ComputePC_Features;
-Step4_ComputeWaveformFeatures;
-Step5_ComputeAllSimilarity;
-Step6_Clustering;
-Step7_AutoCuration;
-Step8_VisualizeClusters;
+Step3_ComputeWaveformFeatures;
+Step4_ComputeAllSimilarity;
+Step5_Clustering;
+Step6_AutoCuration;
+Step7_VisualizeClusters;
 
 
 

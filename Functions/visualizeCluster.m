@@ -164,7 +164,7 @@ xlabel(ax_similarity{2,1}, 'Units (sorted by sessions)');
 
 % 2D scatter
 similarity_all = Output.SimilarityAll;
-similarity_names = {'Waveform', 'ISI', 'Auto correlogram', 'PETH'};
+similarity_names = Output.SimilarityNames;
 similarity_matched = cell(1, length(similarity_names));
 similarity_unmatched = cell(1, length(similarity_names));
 similarity_this = cell(1, length(similarity_names));

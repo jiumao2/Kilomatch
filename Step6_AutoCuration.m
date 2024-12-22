@@ -306,7 +306,6 @@ savefig(fig, fullfile(user_settings.output_folder, 'Figures/CuratedResult.fig'))
 DistanceMatrix = NaN(length(idx_cluster_hdbscan_curated));
 WaveformSimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
 RawWaveformSimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
-PC_SimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
 PETH_SimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
 ISI_SimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
 AutoCorrSimilalrityMatrix = NaN(length(idx_cluster_hdbscan_curated));
@@ -320,9 +319,6 @@ for k = 1:size(idx_unit_pairs, 1)
 
     RawWaveformSimilarityMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = similarity_raw_waveform(k);
     RawWaveformSimilarityMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = similarity_raw_waveform(k);
-
-    PC_SimilarityMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = similarity_PC(k);
-    PC_SimilarityMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = similarity_PC(k);
 
     PETH_SimilarityMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = similarity_PETH(k);
     PETH_SimilarityMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = similarity_PETH(k);
@@ -354,13 +350,11 @@ Output.NumSession = max(sessions);
 Output.Sessions = sessions;
 Output.Motion = positions;
 Output.Nblock = nblock;
-Output.PCs = PCs;
 
 % The features used / unused in Kilomatch that might be useful in manual curation
 Output.DistanceMatrix = DistanceMatrix;
 Output.WaveformSimilarityMatrix = WaveformSimilarityMatrix;
 Output.RawWaveformSimilarityMatrix = RawWaveformSimilarityMatrix;
-Output.PC_SimilarityMatrix = PC_SimilarityMatrix;
 Output.ISI_SimilarityMatrix = ISI_SimilarityMatrix;
 Output.AutoCorrSimilalrityMatrix = AutoCorrSimilalrityMatrix;
 Output.PETH_SimilarityMatrix = PETH_SimilarityMatrix;
