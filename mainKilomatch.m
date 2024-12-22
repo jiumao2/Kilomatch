@@ -13,7 +13,7 @@ Step1_Preprocess;
 Step2_MotionEstimation;
 Step3_ComputeWaveformFeatures;
 Step4_ComputeAllSimilarity;
-Step5_Clustering;
+Step5_IterativeClustering;
 Step6_AutoCuration;
 Step7_VisualizeClusters;
 

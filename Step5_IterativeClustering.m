@@ -7,10 +7,10 @@ similarity_matrix = zeros(n_unit);
 names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};
 similarity_all = [similarity_waveform, similarity_ISI, similarity_AutoCorr, similarity_PETH];
 
-similarity_names = user_settings.motionEstimation.features;
+similarity_names = user_settings.motionEstimation.features';
 idx_names = zeros(1, length(similarity_names));
 for k = 1:length(similarity_names)
-    idx_names{k} = find(strcmpi(names_all, similarity_names{k}));
+    idx_names(k) = find(strcmpi(names_all, similarity_names{k}));
 end
 similarity_all = similarity_all(:, idx_names);
 
@@ -98,7 +98,7 @@ disp(['Cophenetic Correlation Coefficient = ', num2str(coph_corr)]);
 leafOrder = optimalleaforder(Z, dissimilarity_matrix, 'Transformation', @(x)1-x);
 
 similarity = sum(similarity_all.*weights, 2);
-edges = 0:0.01:5;
+edges = 0:0.05:5;
 hist_matched = histcounts(similarity(is_matched == 1), edges, 'Normalization', 'probability');
 hist_unmatched = histcounts(similarity(is_matched == 0), edges, 'Normalization', 'probability');
 hist_diff = hist_matched - hist_unmatched;

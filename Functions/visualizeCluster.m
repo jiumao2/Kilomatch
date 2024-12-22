@@ -119,6 +119,14 @@ similarity_matrix = {...
     Output.PETH_SimilarityMatrix(units, units),...
     };
 
+names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};
+idx_names = zeros(1, length(Output.SimilarityNames));
+for k = 1:length(Output.SimilarityNames)
+    idx_names(k) = find(strcmpi(names_all, Output.SimilarityNames{k}));
+end
+overlaps = overlaps([1, idx_names+1]);
+similarity_matrix = similarity_matrix([1, idx_names+1]);
+
 similarity_names = ['Weighted sum', Output.SimilarityNames];
 
 ax_similarity = EasyPlot.createGridAxes(fig, 2, length(similarity_names),...
