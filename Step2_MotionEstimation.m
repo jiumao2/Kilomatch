@@ -139,7 +139,7 @@ for iter = 1:user_settings.motionEstimation.n_iter
 end
 
 similarity = sum(similarity_all.*weights, 2);
-edges = 0:0.01:5;
+edges = 0:0.05:5;
 hist_matched = histcounts(similarity(is_matched == 1), edges, 'Normalization', 'probability');
 hist_unmatched = histcounts(similarity(is_matched == 0), edges, 'Normalization', 'probability');
 hist_diff = hist_matched - hist_unmatched;
