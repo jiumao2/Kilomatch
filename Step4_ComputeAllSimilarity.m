@@ -83,7 +83,7 @@ toc;
 
 save(fullfile(user_settings.output_folder, 'AllSimilarity.mat'),...
     'similarity_waveform', 'similarity_raw_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH',...
-    'distance', 'idx_unit_pairs', 'session_pairs');
+    'distance', 'idx_unit_pairs', 'session_pairs', '-nocompression');
 
 %%
 fig = EasyPlot.figure();

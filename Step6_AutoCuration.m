@@ -271,7 +271,7 @@ end
 %% save the curated result
 save(fullfile(user_settings.output_folder, 'CurationResults.mat'),...
     'hdbscan_matrix_curated', 'idx_cluster_hdbscan_curated', 'matched_pairs_curated',...
-    'similarity_matrix', 'sessions', 'leafOrder');
+    'similarity_matrix', 'sessions', 'leafOrder', '-nocompression');
 
 % Plot the final results
 fig = EasyPlot.figure();
@@ -299,7 +299,6 @@ linkaxes([ax_all{1}, ax_all{2}]);
 
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/CuratedResult'));
-savefig(fig, fullfile(user_settings.output_folder, 'Figures/CuratedResult.fig'));
 
 %% save the final output
 % construct a similarity matrix for each feature
@@ -359,7 +358,7 @@ Output.ISI_SimilarityMatrix = ISI_SimilarityMatrix;
 Output.AutoCorrSimilalrityMatrix = AutoCorrSimilalrityMatrix;
 Output.PETH_SimilarityMatrix = PETH_SimilarityMatrix;
 
-save(fullfile(user_settings.output_folder, 'Output.mat'), 'Output');
+save(fullfile(user_settings.output_folder, 'Output.mat'), 'Output', '-nocompression');
 fprintf('Kilomatch done! Output is saved to %s!\n', fullfile(user_settings.output_folder, 'Output.mat'));
 fprintf('Found %d clusters and %d matches from %d units during %d sessions!\n',...
     Output.NumClusters, size(Output.MatchedPairs, 1), Output.NumUnits, Output.NumSession);

@@ -46,5 +46,5 @@ progBar.release();
 
 %% Save the corrected waveforms
 save(fullfile(user_settings.output_folder, 'Waveforms.mat'),...
-    'waveforms', 'waveforms_corrected', 'waveform_channels');
+    'waveforms', 'waveforms_corrected', 'waveform_channels', '-nocompression');
 

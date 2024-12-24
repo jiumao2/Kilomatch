@@ -80,5 +80,5 @@ progBar.release();
 
 % Save the preprocessed data
 fprintf('Saving to %s...\n', fullfile(user_settings.output_folder, 'spikeInfo.mat'));
-save(fullfile(user_settings.output_folder, 'spikeInfo.mat'), 'spikeInfo');
+save(fullfile(user_settings.output_folder, 'spikeInfo.mat'), 'spikeInfo', '-nocompression');
 

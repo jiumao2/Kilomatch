@@ -66,7 +66,7 @@ toc;
 
 % save the similarity
 save(fullfile(user_settings.output_folder, 'SimilarityForCorretion.mat'),...
-    'similarity_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH', 'idx_unit_pairs');
+    'similarity_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH', 'idx_unit_pairs', '-nocompression');
 
 %% Pre-clustering
 n_unit = length(spikeInfo);
@@ -349,4 +349,4 @@ EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Motion'));
 
 % save data
-save(fullfile(user_settings.output_folder, 'Motion.mat'), 'positions', 'depth_bins', 'nblock');
+save(fullfile(user_settings.output_folder, 'Motion.mat'), 'positions', 'depth_bins', 'nblock', '-nocompression');
