@@ -169,6 +169,5 @@ linkaxes([ax_all{1}, ax_all{2}, ax_all{3}]);
 
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/ClusteringResult'));
-savefig(fig, fullfile(user_settings.output_folder, 'Figures/ClusteringResult.fig'));
 
 

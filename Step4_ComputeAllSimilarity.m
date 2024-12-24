@@ -42,6 +42,11 @@ similarity_PETH = zeros(n_pairs, 1);
 distance = zeros(n_pairs, 1);
 
 % compute similarity
+% start parallel pool
+if isempty(gcp('nocreate'))
+    parpool();
+end
+
 disp('Start computing similarity!');
 progBar = ProgressBar(n_pairs, ...
     'IsParallel', true, ...

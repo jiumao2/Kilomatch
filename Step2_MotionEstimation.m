@@ -34,6 +34,10 @@ similarity_AutoCorr = zeros(n_pairs, 1);
 similarity_PETH = zeros(n_pairs, 1);
 
 % compute similarity
+% start parallel pool
+if isempty(gcp('nocreate'))
+    parpool();
+end
 disp('Start computing similarity!');
 progBar = ProgressBar(n_pairs, ...
     'IsParallel', true, ...
@@ -45,12 +49,6 @@ progBar.setup([], [], []);
 parfor k = 1:n_pairs
     idx_A = idx_unit_pairs(k,1);
     idx_B = idx_unit_pairs(k,2);
-
-    session_A = session_pairs(k,1);
-    session_B = session_pairs(k,2);
-
-    idx_block_A = findNearestPoint(depth_bins, spikeInfo(idx_B).Location(2));
-    idx_block_B = findNearestPoint(depth_bins, spikeInfo(idx_A).Location(2));
     
     similarity_waveform(k) = waveformSimilarity(spikeInfo(idx_A), spikeInfo(idx_B),...
             user_settings.waveformCorrection.n_nearest_channels,...
@@ -241,7 +239,7 @@ for k = 1:nblock
     p_boot = zeros(n_boot, n_session);
 
     progBar = ProgressBar(...
-        length(spikeInfo), ...
+        n_boot, ...
         'Title', 'Computing 95CI' ...
         );
     for j = 1:n_boot
