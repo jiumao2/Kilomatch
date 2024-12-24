@@ -2,7 +2,6 @@
 n_unit = length(spikeInfo);
 sessions = [spikeInfo.SessionIndex];
 n_session = max(sessions);
-similarity_matrix = zeros(n_unit);
 
 names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};
 similarity_all = [similarity_waveform, similarity_ISI, similarity_AutoCorr, similarity_PETH];
@@ -17,6 +16,7 @@ similarity_all = similarity_all(:, idx_names);
 weights = ones(1, length(similarity_names))./length(similarity_names);
 mean_similarity = sum(similarity_all.*weights, 2);
 
+similarity_matrix = zeros(n_unit);
 for k = 1:size(idx_unit_pairs, 1)
     similarity_matrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = mean_similarity(k);
     similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
@@ -41,7 +41,10 @@ for iter = 1:user_settings.clustering.n_iter
     
     json_text = jsonencode(HDBSCAB_settings);
     
-    writelines(json_text, fullfile(user_settings.output_folder, 'HDBSCAN_settings.json'));
+    fid = fopen(fullfile(user_settings.output_folder, 'HDBSCAN_settings.json'), 'w');
+    fwrite(fid, json_text);
+    fclose(fid);
+    
     writeNPY(distance_matrix, fullfile(user_settings.output_folder, 'DistanceMatrix.npy'));
     
     system([fullfile(user_settings.path_to_python), ' ',...

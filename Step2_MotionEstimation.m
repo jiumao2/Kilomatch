@@ -1,60 +1,70 @@
 % Estimating the motion of the electrode
 disp('---------------Motion Estimation---------------');
+max_distance = user_settings.motionEstimation.max_motion_distance;
 
-n_unit = length(spikeInfo);
-sessions = [spikeInfo.SessionIndex];
-n_session = max(sessions);
-
-% Reserve memory for the variables
-similarity_waveform = zeros(1e7, 1);
-similarity_ISI = zeros(1e7, 1);
-similarity_AutoCorr = zeros(1e7, 1);
-similarity_PETH = zeros(1e7, 1);
-idx_unit_pairs = zeros(1e7, 2);
-
+idx_unit_pairs = zeros(1e8, 2);
 count = 0;
-% find the best unit pairs between days and the corresponding movement
 for k = 1:length(spikeInfo)
-    for j = k+1:length(spikeInfo)
-        % excluded unit pairs from the same session
-        if spikeInfo(k).SessionIndex ==spikeInfo(j).SessionIndex
-            continue
-        end
-        
-        % exclude unit pairs that are far away
-        if abs(spikeInfo(k).Location(2) - spikeInfo(j).Location(2)) > user_settings.motionEstimation.max_motion_distance
+    for j = k+1:length(spikeInfo)  
+        if abs(spikeInfo(j).Location(2) - spikeInfo(k).Location(2)) > max_distance
             continue
         end
         
         count = count+1;
-
-        similarity_waveform(count) = waveformSimilarity(spikeInfo(k), spikeInfo(j),...
-            user_settings.waveformCorrection.n_nearest_channels,...
-            user_settings.waveformCorrection.interpolate_algorithm);
-        similarity_ISI(count) = ISI_Similarity(spikeInfo(k), spikeInfo(j));
-        similarity_AutoCorr(count) = autocorrelogramSimilarity(spikeInfo(k), spikeInfo(j));
-        similarity_PETH(count) = PETH_Similarity(spikeInfo(k), spikeInfo(j));
-
         idx_unit_pairs(count,:) = [k,j];
     end
-
-    if mod(k, 20) == 1
-        toc;
+    if mod(k, 100) == 1
+        toc
         fprintf('%d / %d done!\n', k, length(spikeInfo));
     end
 end
 
-similarity_waveform = similarity_waveform(1:count);
-similarity_ISI = similarity_ISI(1:count);
-similarity_AutoCorr = similarity_AutoCorr(1:count);
-similarity_PETH = similarity_PETH(1:count);
 idx_unit_pairs = idx_unit_pairs(1:count,:);
+session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_unit_pairs(:,2)).SessionIndex]'];
+n_pairs = size(idx_unit_pairs, 1);
+
+%%
+similarity_waveform = zeros(n_pairs, 1);
+similarity_ISI = zeros(n_pairs, 1);
+similarity_AutoCorr = zeros(n_pairs, 1);
+similarity_PETH = zeros(n_pairs, 1);
+
+% compute similarity
+disp('Start computing similarity!');
+toc;
+parfor_progress(n_pairs);
+parfor k = 1:n_pairs
+    idx_A = idx_unit_pairs(k,1);
+    idx_B = idx_unit_pairs(k,2);
+
+    session_A = session_pairs(k,1);
+    session_B = session_pairs(k,2);
+
+    idx_block_A = findNearestPoint(depth_bins, spikeInfo(idx_B).Location(2));
+    idx_block_B = findNearestPoint(depth_bins, spikeInfo(idx_A).Location(2));
+    
+    similarity_waveform(k) = waveformSimilarity(spikeInfo(idx_A), spikeInfo(idx_B),...
+            user_settings.waveformCorrection.n_nearest_channels,...
+            user_settings.waveformCorrection.interpolate_algorithm);
+    similarity_ISI(k) = ISI_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    similarity_AutoCorr(k) = autocorrelogramSimilarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    similarity_PETH(k) = PETH_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    
+    parfor_progress;
+end
+parfor_progress(0);
+
+fprintf('Computing similarity done! Saved to %s ...\n', fullfile(user_settings.output_folder, 'AllSimilarity.mat'));
+toc;
 
 % save the similarity
 save(fullfile(user_settings.output_folder, 'SimilarityForCorretion.mat'),...
     'similarity_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH', 'idx_unit_pairs');
 
 %% Pre-clustering
+n_unit = length(spikeInfo);
+sessions = [spikeInfo.SessionIndex];
+n_session = max(sessions);
 names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};
 similarity_all = [similarity_waveform, similarity_ISI, similarity_AutoCorr, similarity_PETH];
 
@@ -68,6 +78,7 @@ similarity_all = similarity_all(:, idx_names);
 weights = ones(1, length(similarity_names))./length(similarity_names);
 mean_similarity = sum(similarity_all.*weights, 2);
 
+similarity_matrix = zeros(n_unit);
 for k = 1:size(idx_unit_pairs, 1)
     similarity_matrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = mean_similarity(k);
     similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
@@ -92,7 +103,10 @@ for iter = 1:user_settings.motionEstimation.n_iter
     
     json_text = jsonencode(HDBSCAB_settings);
     
-    writelines(json_text, fullfile(user_settings.output_folder, 'HDBSCAN_settings.json'));
+    fid = fopen(fullfile(user_settings.output_folder, 'HDBSCAN_settings.json'), 'w');
+    fwrite(fid, json_text);
+    fclose(fid);
+
     writeNPY(distance_matrix, fullfile(user_settings.output_folder, 'DistanceMatrix.npy'));
     
     system([fullfile(user_settings.path_to_python), ' ',...
@@ -174,19 +188,19 @@ n_session = max([spikeInfo.SessionIndex]);
 session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_unit_pairs(:,2)).SessionIndex]'];
 
 % get all the good pairs and their distance
-depth = [];
-dx = [];
-idx_1 = [];
-idx_2 = [];
+depth = zeros(1, length(idx_good));
+dx = zeros(1, length(idx_good));
+idx_1 = zeros(1, length(idx_good));
+idx_2 = zeros(1, length(idx_good));
 for k = 1:length(idx_good)
     unit1 = idx_unit_pairs(idx_good(k), 1);
     unit2 = idx_unit_pairs(idx_good(k), 2);
     d_this = mean([spikeInfo(unit2).Location(2), spikeInfo(unit1).Location(2)]);
 
-    idx_1 = [idx_1, session_pairs(idx_good(k),1)];
-    idx_2 = [idx_2, session_pairs(idx_good(k),2)];
-    dx = [dx, spikeInfo(unit2).Location(2) - spikeInfo(unit1).Location(2)];
-    depth = [depth, d_this];
+    idx_1(k) = session_pairs(idx_good(k),1);
+    idx_2(k) = session_pairs(idx_good(k),2);
+    dx(k) = spikeInfo(unit2).Location(2) - spikeInfo(unit1).Location(2);
+    depth(k) = d_this;
 end
 
 depth_edges = linspace(min(depth), max(depth), nblock+1);
@@ -194,7 +208,7 @@ depth_bins = 0.5*(depth_edges(1:end-1) + depth_edges(2:end));
 idx_block = findNearestPoint(depth_bins, depth);
 
 % compute the motion and 95CI
-n_boot = 1000;
+n_boot = 100;
 positions = NaN(nblock, n_session);
 positions_ci95 = zeros(2, nblock, n_session);
 for k = 1:nblock
@@ -227,7 +241,7 @@ for k = 1:nblock
         p_this = fminunc(loss_fun, rand(1, n_session), options);
         p_boot(j,:) = p_this - mean(p_this);
     
-        if mod(j, 100) == 1
+        if mod(j, 10) == 1
             fprintf('%d / %d done!\n', j, n_boot);
         end
     end

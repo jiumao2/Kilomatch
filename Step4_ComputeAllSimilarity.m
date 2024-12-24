@@ -1,16 +1,8 @@
 %% Recompute the similarities
 max_distance = user_settings.clustering.max_distance;
 
-similarity_waveform = zeros(1e7, 1);
-similarity_raw_waveform = zeros(1e7, 1);
-similarity_ISI = zeros(1e7, 1);
-similarity_AutoCorr = zeros(1e7, 1);
-similarity_PETH = zeros(1e7, 1);
-distance = zeros(1e7, 1);
-idx_unit_pairs = zeros(1e7, 2);
-
+idx_unit_pairs = zeros(1e8, 2);
 count = 0;
-% find the best unit pairs between days and the corresponding movement
 for k = 1:length(spikeInfo)
     for j = k+1:length(spikeInfo)
         session_k = spikeInfo(k).SessionIndex;
@@ -25,31 +17,55 @@ for k = 1:length(spikeInfo)
         end
         
         count = count+1;
-        similarity_waveform(count) = waveformSimilarityMotionCorrected(waveforms_corrected([k,j],:,:), waveform_channels([k,j],:));
-        similarity_raw_waveform(count) = waveformSimilarityMotionCorrected(waveforms([k,j],:,:), waveform_channels([k,j],:));
-        similarity_ISI(count) = ISI_Similarity(spikeInfo(k), spikeInfo(j));
-        similarity_AutoCorr(count) = autocorrelogramSimilarity(spikeInfo(k), spikeInfo(j));
-        similarity_PETH(count) = PETH_Similarity(spikeInfo(k), spikeInfo(j));
-        distance_this = spikeInfo(j).Location - spikeInfo(k).Location;
-        distance_this(2) = distance(2) - (positions(idx_block_j, session_j) - positions(idx_block_k, session_k));
-        distance(count) = sqrt(sum(distance_this.^2));
         idx_unit_pairs(count,:) = [k,j];
     end
-    if mod(k, 50) == 1
+    if mod(k, 100) == 1
         toc
         fprintf('%d / %d done!\n', k, length(spikeInfo));
     end
 end
 
-similarity_waveform = similarity_waveform(1:count);
-similarity_raw_waveform = similarity_raw_waveform(1:count);
-similarity_ISI = similarity_ISI(1:count);
-similarity_AutoCorr = similarity_AutoCorr(1:count);
-similarity_PETH = similarity_PETH(1:count);
-distance = distance(1:count);
-
 idx_unit_pairs = idx_unit_pairs(1:count,:);
 session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_unit_pairs(:,2)).SessionIndex]'];
+n_pairs = size(idx_unit_pairs, 1);
+
+%%
+similarity_waveform = zeros(n_pairs, 1);
+similarity_raw_waveform = zeros(n_pairs, 1);
+similarity_ISI = zeros(n_pairs, 1);
+similarity_AutoCorr = zeros(n_pairs, 1);
+similarity_PETH = zeros(n_pairs, 1);
+distance = zeros(n_pairs, 1);
+
+% compute similarity
+disp('Start computing similarity!');
+toc;
+parfor_progress(n_pairs);
+parfor k = 1:n_pairs
+    idx_A = idx_unit_pairs(k,1);
+    idx_B = idx_unit_pairs(k,2);
+
+    session_A = session_pairs(k,1);
+    session_B = session_pairs(k,2);
+
+    idx_block_A = findNearestPoint(depth_bins, spikeInfo(idx_B).Location(2));
+    idx_block_B = findNearestPoint(depth_bins, spikeInfo(idx_A).Location(2));
+    
+    similarity_waveform(k) = waveformSimilarityMotionCorrected(waveforms_corrected([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:));
+    similarity_raw_waveform(k) = waveformSimilarityMotionCorrected(waveforms([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:));
+    similarity_ISI(k) = ISI_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    similarity_AutoCorr(k) = autocorrelogramSimilarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    similarity_PETH(k) = PETH_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    distance_this = spikeInfo(idx_B).Location - spikeInfo(idx_A).Location;
+    distance_this(2) = distance_this(2) - (positions(idx_block_B, session_B) - positions(idx_block_A, session_A));
+    distance(k) = sqrt(sum(distance_this.^2));
+    
+    parfor_progress;
+end
+parfor_progress(0);
+
+fprintf('Computing similarity done! Saved to %s ...\n', fullfile(user_settings.output_folder, 'AllSimilarity.mat'));
+toc;
 
 save(fullfile(user_settings.output_folder, 'AllSimilarity.mat'),...
     'similarity_waveform', 'similarity_raw_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH',...

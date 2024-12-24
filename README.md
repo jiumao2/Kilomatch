@@ -5,7 +5,10 @@
 ## Installation
 
 - Download the code from the [Kilomatch](https://github.com/jiumao2/Kilomatch)
-- MATLAB with at least `Statistics and Machine Learning Toolbox` installed. The development is based on MATLAB R2022b.
+- The development is based on MATLAB R2022b and the following toolboxes should be installed:
+    - `Statistics and Machine Learning Toolbox`
+    - `Optimization Toolbox`
+    - `Parallel Computing Toolbox`
 - Python 3.9 or later with `scikit-learn` package installed.
 
 ```shell
