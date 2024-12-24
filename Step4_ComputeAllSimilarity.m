@@ -3,6 +3,11 @@ max_distance = user_settings.clustering.max_distance;
 
 idx_unit_pairs = zeros(1e8, 2);
 count = 0;
+
+progBar = ProgressBar(...
+    length(spikeInfo), ...
+    'Title', 'Getting unit pairs' ...
+    );
 for k = 1:length(spikeInfo)
     for j = k+1:length(spikeInfo)
         session_k = spikeInfo(k).SessionIndex;
@@ -19,11 +24,10 @@ for k = 1:length(spikeInfo)
         count = count+1;
         idx_unit_pairs(count,:) = [k,j];
     end
-    if mod(k, 100) == 1
-        toc
-        fprintf('%d / %d done!\n', k, length(spikeInfo));
-    end
+
+    progBar([], [], []);
 end
+progBar.release();
 
 idx_unit_pairs = idx_unit_pairs(1:count,:);
 session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_unit_pairs(:,2)).SessionIndex]'];
@@ -39,8 +43,13 @@ distance = zeros(n_pairs, 1);
 
 % compute similarity
 disp('Start computing similarity!');
-toc;
-parfor_progress(n_pairs);
+progBar = ProgressBar(n_pairs, ...
+    'IsParallel', true, ...
+    'Title', 'Computing Similarity', ...
+    'UpdateRate', 1 ...
+    );
+progBar.setup([], [], []);
+
 parfor k = 1:n_pairs
     idx_A = idx_unit_pairs(k,1);
     idx_B = idx_unit_pairs(k,2);
@@ -60,9 +69,9 @@ parfor k = 1:n_pairs
     distance_this(2) = distance_this(2) - (positions(idx_block_B, session_B) - positions(idx_block_A, session_A));
     distance(k) = sqrt(sum(distance_this.^2));
     
-    parfor_progress;
+    updateParallel(1);
 end
-parfor_progress(0);
+progBar.release();
 
 fprintf('Computing similarity done! Saved to %s ...\n', fullfile(user_settings.output_folder, 'AllSimilarity.mat'));
 toc;

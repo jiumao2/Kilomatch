@@ -13,6 +13,10 @@ chanMap.ycoords = spikeInfo(1).Ycoords;
 chanMap.kcoords = spikeInfo(1).Kcoords;
 chanMap.connected = ones(1, length(spikeInfo(1).Xcoords));
 
+progBar = ProgressBar(...
+    length(spikeInfo), ...
+    'Title', 'Computing corrected waveforms' ...
+    );
 for k = 1:length(spikeInfo)
     % Do it with corrected waveforms
     location = spikeInfo(k).Location;
@@ -35,7 +39,10 @@ for k = 1:length(spikeInfo)
         waveforms_corrected(k,j,:) = waveformEstimation(spikeInfo(k).Waveform, location, chanMap, location_new,...
             x, y, algorithm);
     end
+
+    progBar([], [], []);
 end
+progBar.release();
 
 %% Save the corrected waveforms
 save(fullfile(user_settings.output_folder, 'Waveforms.mat'),...

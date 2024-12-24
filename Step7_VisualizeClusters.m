@@ -6,11 +6,17 @@ close all;
 load(fullfile(user_settings.output_folder, 'spikeInfo.mat'));
 waveformsAll = load(fullfile(user_settings.output_folder, 'Waveforms.mat'));
 
+progBar = ProgressBar(...
+    length(spikeInfo), ...
+    'Title', 'Plotting clusters' ...
+    );
 for k = 1:Output.NumClusters
     visualizeCluster(Output, k, spikeInfo, waveformsAll, user_settings);
     close all;
-end
 
+    progBar([], [], []);
+end
+progBar.release();
 
 
 

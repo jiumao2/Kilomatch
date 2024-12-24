@@ -4,6 +4,11 @@ max_distance = user_settings.motionEstimation.max_motion_distance;
 
 idx_unit_pairs = zeros(1e8, 2);
 count = 0;
+
+progBar = ProgressBar(...
+    length(spikeInfo), ...
+    'Title', 'Getting unit pairs' ...
+    );
 for k = 1:length(spikeInfo)
     for j = k+1:length(spikeInfo)  
         if abs(spikeInfo(j).Location(2) - spikeInfo(k).Location(2)) > max_distance
@@ -13,11 +18,10 @@ for k = 1:length(spikeInfo)
         count = count+1;
         idx_unit_pairs(count,:) = [k,j];
     end
-    if mod(k, 100) == 1
-        toc
-        fprintf('%d / %d done!\n', k, length(spikeInfo));
-    end
+
+    progBar([], [], []);
 end
+progBar.release();
 
 idx_unit_pairs = idx_unit_pairs(1:count,:);
 session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_unit_pairs(:,2)).SessionIndex]'];
@@ -31,8 +35,13 @@ similarity_PETH = zeros(n_pairs, 1);
 
 % compute similarity
 disp('Start computing similarity!');
-toc;
-parfor_progress(n_pairs);
+progBar = ProgressBar(n_pairs, ...
+    'IsParallel', true, ...
+    'Title', 'Computing Similarity', ...
+    'UpdateRate', 1 ...
+    );
+progBar.setup([], [], []);
+
 parfor k = 1:n_pairs
     idx_A = idx_unit_pairs(k,1);
     idx_B = idx_unit_pairs(k,2);
@@ -50,11 +59,11 @@ parfor k = 1:n_pairs
     similarity_AutoCorr(k) = autocorrelogramSimilarity(spikeInfo(idx_A), spikeInfo(idx_B));
     similarity_PETH(k) = PETH_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
     
-    parfor_progress;
+    updateParallel(1);
 end
-parfor_progress(0);
+progBar.release();
 
-fprintf('Computing similarity done! Saved to %s ...\n', fullfile(user_settings.output_folder, 'AllSimilarity.mat'));
+fprintf('Computing similarity done! Saved to %s ...\n', fullfile(user_settings.output_folder, 'SimilarityForCorretion.mat'));
 toc;
 
 % save the similarity
@@ -230,6 +239,11 @@ for k = 1:nblock
 
     options = optimset('MaxFunEvals', 1e8, 'MaxIter', 1e8, 'Display', 'none');
     p_boot = zeros(n_boot, n_session);
+
+    progBar = ProgressBar(...
+        length(spikeInfo), ...
+        'Title', 'Computing 95CI' ...
+        );
     for j = 1:n_boot
         idx_rand = randi(length(dx_block), 1, length(dx_block));
         dx_this = dx_block(idx_rand);
@@ -241,10 +255,9 @@ for k = 1:nblock
         p_this = fminunc(loss_fun, rand(1, n_session), options);
         p_boot(j,:) = p_this - mean(p_this);
     
-        if mod(j, 10) == 1
-            fprintf('%d / %d done!\n', j, n_boot);
-        end
+        progBar([], [], []);
     end
+    progBar.release();
 
     p_ci95 = zeros(2, n_session);
     for j = 1:n_session

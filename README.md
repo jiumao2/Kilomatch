@@ -80,22 +80,33 @@ pip install scikit-learn
 ## References
 
 > [HDBSCAN](https://scikit-learn.org/stable/modules/clustering.html#hdbscan)  
->
+> HDBSCAN - Hierarchical Density-Based Spatial Clustering of Applications with Noise. Performs DBSCAN over varying epsilon values and integrates the result to find a clustering that gives the best stability over epsilon. This allows HDBSCAN to find clusters of varying densities (unlike DBSCAN), and be more robust to parameter selection.
+> 
 > Campello, R.J.G.B., Moulavi, D., Sander, J. (2013). Density-Based Clustering Based on Hierarchical Density Estimates. In: Pei, J., Tseng, V.S., Cao, L., Motoda, H., Xu, G. (eds) Advances in Knowledge Discovery and Data Mining. PAKDD 2013. Lecture Notes in Computer Science(), vol 7819. Springer, Berlin, Heidelberg. Density-Based Clustering Based on Hierarchical Density Estimates  
 >
 > L. McInnes and J. Healy, (2017). Accelerated Hierarchical Density Based Clustering. In: IEEE International Conference on Data Mining Workshops (ICDMW), 2017, pp. 33-42. Accelerated Hierarchical Density Based Clustering
 
 > [Kilosort](https://github.com/MouseLand/Kilosort)  
+> Fast spike sorting with drift correction  
+> 
 > Pachitariu, Marius, Shashwat Sridhar, Jacob Pennington, and Carsen Stringer. “Spike Sorting with Kilosort4.” Nature Methods 21, no. 5 (May 2024): 914–21. https://doi.org/10.1038/s41592-024-02232-7.
 
 > [DREDge](https://github.com/evarol/DREDge)  
+> Robust online multiband drift estimation in electrophysiology data  
+> 
 > DREDge: robust motion correction for high-density extracellular recordings across species. https://www.biorxiv.org/content/10.1101/2023.10.24.563768v1
 
-> [EasyPlot](https://github.com/jiumao2/EasyPlot)
+> [EasyPlot](https://github.com/jiumao2/EasyPlot)  
+> A MATLAB package for making scientific figures easily
 
-> [npy-matlab](https://github.com/kwikteam/npy-matlab)
+> [npy-matlab](https://github.com/kwikteam/npy-matlab)  
+> Experimental code to read/write NumPy .NPY files in MATLAB
 
-> [JSON+C parsing for MATLAB](https://github.com/seanbone/matlab-json-c/releases/tag/v1.1)
+> [JSON+C parsing for MATLAB](https://github.com/seanbone/matlab-json-c/releases/tag/v1.1)  
+> A simple parser for JSON with Comments written in MATLAB
+
+> [MatlabProgressBar](https://github.com/JAAdrian/MatlabProgressBar)  
+> This MATLAB class provides a smart progress bar like tqdm in the command window and is optimized for progress information in simple iterations or large frameworks with full support of parallel parfor loops provided by the MATLAB Parallel Computing Toolbox.  
 
 ## License
 

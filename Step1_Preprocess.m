@@ -32,6 +32,11 @@ chanMap.xcoords = spikeInfo(1).Xcoords;
 chanMap.ycoords = spikeInfo(1).Ycoords;
 chanMap.kcoords = spikeInfo(1).Kcoords;
 chanMap.connected = ones(1, length(spikeInfo(1).Xcoords));
+
+progBar = ProgressBar(...
+    length(spikeInfo), ...
+    'Title', 'Preprocessing spikeInfo' ...
+    );
 for k = 1:length(spikeInfo)
     % compute the location of each unit
     [x, y, z, amp] = spikeLocation(spikeInfo(k).Waveform, chanMap,...
@@ -68,11 +73,9 @@ for k = 1:length(spikeInfo)
     spikeInfo(k).ISI = isi_freq_smoothed;
 
 
-    if mod(k, 100) == 1
-        toc;
-        fprintf('%d / %d done!\n', k, length(spikeInfo));
-    end
+    progBar([], [], []);
 end
+progBar.release();
 
 % Save the preprocessed data
 fprintf('Saving to %s...\n', fullfile(user_settings.output_folder, 'spikeInfo.mat'));
