@@ -4,6 +4,26 @@ n_cluster = max(idx_cluster_hdbscan);
 fprintf('%d clusters and %d pairs before removing bad units!\n',...
     n_cluster, (sum(hdbscan_matrix(:)) - size(hdbscan_matrix, 1))/2);
 
+% split a cluster if there is a clear boundary in good_matches_matrix
+n_cluster_new = n_cluster;
+for k = 1:n_cluster
+    units = find(idx_cluster_hdbscan == k);
+    graph_this = graph(good_matches_matrix(units, units));
+    idx_sub_clusters = conncomp(graph_this);
+
+    n_sub_clusters = max(idx_sub_clusters);
+    if n_sub_clusters <= 1
+        continue
+    end
+    for j = 2:n_sub_clusters
+        units_this = units(idx_sub_clusters == j);
+        idx_cluster_hdbscan(units_this) = n_cluster_new+j-1;
+    end
+
+    n_cluster_new = n_cluster_new + n_sub_clusters - 1;
+end
+n_cluster = n_cluster_new;
+
 % remove bad units in the cluster if any similarity < reject_thres
 hdbscan_matrix_raw = hdbscan_matrix;
 for k = 1:n_cluster
@@ -36,26 +56,6 @@ for k = 1:n_cluster
         similarity_matrix_this(:, idx_remove) = [];
     end
 end
-
-% split a cluster if there is a clear boundary in good_matches_matrix
-n_cluster_new = n_cluster;
-for k = 1:n_cluster
-    units = find(idx_cluster_hdbscan == k);
-    graph_this = graph(good_matches_matrix(units, units));
-    idx_sub_clusters = conncomp(graph_this);
-
-    n_sub_clusters = max(idx_sub_clusters);
-    if n_sub_clusters <= 1
-        continue
-    end
-    for j = 2:n_sub_clusters
-        units_this = units(idx_sub_clusters == j);
-        idx_cluster_hdbscan(units_this) = n_cluster_new+j-1;
-    end
-
-    n_cluster_new = n_cluster_new + n_sub_clusters - 1;
-end
-n_cluster = n_cluster_new;
 
 % update the clusters and hdbscan matrix
 idx_remove = [];
@@ -200,7 +200,7 @@ fprintf('%d merging steps are done!\n', -num_before+num_after);
 fprintf('%d clusters and %d pairs after merging good clusters!\n',...
     n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
 
-%% find possible pairings for unpaired units
+% find possible pairings for unpaired units
 disp('Checking the unpaired units!');
 
 count_merges = 0;
