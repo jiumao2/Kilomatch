@@ -6,7 +6,7 @@ n_session = max(sessions);
 names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};
 similarity_all = [similarity_waveform, similarity_ISI, similarity_AutoCorr, similarity_PETH];
 
-similarity_names = user_settings.motionEstimation.features';
+similarity_names = user_settings.clustering.features';
 idx_names = zeros(1, length(similarity_names));
 for k = 1:length(similarity_names)
     idx_names(k) = find(strcmpi(names_all, similarity_names{k}));
