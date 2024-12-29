@@ -47,6 +47,7 @@
 
     // parameters for curating the clusters
     "autoCuration":{
+        "good_prctile": 99, // the percentile of the similarity distribution for unmatched clusters
         "reject_threshold": 0.1 // atanh() transform of the correlation coefficient. Good clusters should have all pair-wise similarity larger than this threshold
     }
 }

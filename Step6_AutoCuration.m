@@ -181,7 +181,7 @@ while flag
 end
 
 % update hdbscan matrix
-hdbscan_matrix = zeros(size(similarity_matrix));
+hdbscan_matrix = zeros(size(similarity_matrix), 'logical');
 for k = 1:n_cluster
     idx = find(idx_cluster_hdbscan == k);
     for j = 1:length(idx)
@@ -216,6 +216,7 @@ while flag_match
         session_this = sessions(unit);
     
         idx_match = find(good_matches_matrix(unit,:) == 1);
+
         if isempty(idx_match)
             continue
         end
@@ -240,7 +241,7 @@ n_cluster = n_cluster_new;
 fprintf('Merged %d unpaired units!\n', count_merges);
 
 % update hdbscan matrix
-hdbscan_matrix = zeros(size(similarity_matrix));
+hdbscan_matrix = zeros(size(similarity_matrix), 'logical');
 for k = 1:n_cluster
     idx = find(idx_cluster_hdbscan == k);
     for j = 1:length(idx)
