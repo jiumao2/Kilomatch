@@ -98,7 +98,7 @@ for iter = 1:user_settings.motionEstimation.n_iter
     % HDBSCAN
     distance_matrix = 1./(1 + tanh(similarity_matrix));
     
-    HDBSCAB_settings.min_samples = 2; % The number of samples in a neighborhood for a point to be considered as a core point.
+    HDBSCAB_settings.min_samples = 1; % The number of samples in a neighborhood for a point to be considered as a core point.
     % This includes the point itself. When None, defaults to min_cluster_size.
     HDBSCAB_settings.cluster_selection_epsilon = 0; % A distance threshold. 
     % Clusters below this value will be merged. This is the minimum epsilon allowed.
