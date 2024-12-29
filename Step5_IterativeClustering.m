@@ -28,8 +28,9 @@ for iter = 1:user_settings.clustering.n_iter
 
     % HDBSCAN
     distance_matrix = 1./(1 + tanh(similarity_matrix));
+    distance_matrix(eye(size(distance_matrix)) == 1) = 0;
     
-    HDBSCAB_settings.min_samples = 2; % The number of samples in a neighborhood for a point to be considered as a core point.
+    HDBSCAB_settings.min_samples = 1; % The number of samples in a neighborhood for a point to be considered as a core point.
     % This includes the point itself. When None, defaults to min_cluster_size.
     HDBSCAB_settings.cluster_selection_epsilon = 0; % A distance threshold. 
     % Clusters below this value will be merged. This is the minimum epsilon allowed.
@@ -48,7 +49,7 @@ for iter = 1:user_settings.clustering.n_iter
     writeNPY(distance_matrix, fullfile(user_settings.output_folder, 'DistanceMatrix.npy'));
     
     system([fullfile(user_settings.path_to_python), ' ',...
-        fullfile(path_kilomatch, 'Functions/hdbscan.py'), ' ',...
+        fullfile(path_kilomatch, 'Functions/main_hdbscan.py'), ' ',...
         fullfile(user_settings.output_folder, 'HDBSCAN_settings.json')]);
     
     idx_cluster_hdbscan = double(readNPY(fullfile(user_settings.output_folder, 'ClusterIndices.npy')));
@@ -56,7 +57,7 @@ for iter = 1:user_settings.clustering.n_iter
     idx_cluster_hdbscan(idx_cluster_hdbscan >= 0) = idx_cluster_hdbscan(idx_cluster_hdbscan >= 0)+1;
     
     n_cluster = max(idx_cluster_hdbscan);
-    hdbscan_matrix = zeros(size(similarity_matrix));
+    hdbscan_matrix = zeros(size(similarity_matrix), 'logical');
     for k = 1:n_cluster
         idx = find(idx_cluster_hdbscan == k);
         for j = 1:length(idx)
@@ -90,36 +91,25 @@ for iter = 1:user_settings.clustering.n_iter
     end
 end
 
-% do hierachical clustering on dissimilarity matrix
-dissimilarity_matrix = 1-tanh(similarity_matrix);
-dissimilarity_matrix(eye(size(dissimilarity_matrix)) == 1) = 0;
-dissimilarity_vector = squareform(dissimilarity_matrix);
-Z = linkage(dissimilarity_vector, 'average');
-coph_corr = cophenet(Z, dissimilarity_vector);
-disp(['Cophenetic Correlation Coefficient = ', num2str(coph_corr)]);
-
-leafOrder = optimalleaforder(Z, dissimilarity_matrix, 'Transformation', @(x)1-x);
+Z = double(readNPY(fullfile(user_settings.output_folder, 'LinkageMatrix.npy')));
+leafOrder = optimalleaforder(Z, distance_matrix);
 
 similarity = sum(similarity_all.*weights, 2);
-edges = 0:0.05:5;
-hist_matched = histcounts(similarity(is_matched == 1), edges, 'Normalization', 'probability');
-hist_unmatched = histcounts(similarity(is_matched == 0), edges, 'Normalization', 'probability');
-hist_diff = hist_matched - hist_unmatched;
-idx_crossed = find(sign(hist_diff) > 0, 1);
-thres = edges(idx_crossed);
+thres = prctile(similarity(is_matched == 0), user_settings.autoCuration.good_prctile);
 
-good_matches_matrix = zeros(size(similarity_matrix));
+good_matches_matrix = zeros(size(similarity_matrix), 'logical');
 idx_good_matches = find((sum(similarity_all.*weights, 2) - thres) > 0);
 for k = 1:length(idx_good_matches)
     good_matches_matrix(idx_unit_pairs(idx_good_matches(k), 1), idx_unit_pairs(idx_good_matches(k), 2)) = 1;
     good_matches_matrix(idx_unit_pairs(idx_good_matches(k), 2), idx_unit_pairs(idx_good_matches(k), 1)) = 1;
 end
 good_matches_matrix(eye(size(good_matches_matrix)) == 1) = 1;
+
 %% Save the results
 save(fullfile(user_settings.output_folder, 'ClusteringResults.mat'),...
     'sessions', 'n_session', 'weights', 'similarity_names', 'similarity_all',...
     'thres', 'good_matches_matrix',...
-    'similarity_matrix', 'distance_matrix', 'dissimilarity_matrix', 'leafOrder',...
+    'similarity_matrix', 'distance_matrix', 'leafOrder',...
     'HDBSCAB_settings', 'idx_cluster_hdbscan', 'hdbscan_matrix', 'n_cluster', '-nocompression');
 
 %% Plot the similarity histogram
@@ -130,8 +120,6 @@ ax = EasyPlot.axes(fig,...
     'MarginBottom', 1,...
     'MarginLeft', 1);
 
-% weights = model_coeff_linear./sum(model_coeff_linear);
-% thres = -model_coeff_const./sum(model_coeff_linear);
 sim_this = sum(similarity_all.*weights, 2);
 histogram(ax, sim_this(is_matched==0), 'Normalization', 'probability', 'BinWidth', 0.05, 'FaceColor', 'k');
 histogram(ax, sim_this(is_matched==1), 'Normalization', 'probability', 'BinWidth', 0.05, 'FaceColor', 'b');

@@ -9,12 +9,13 @@
     - `Statistics and Machine Learning Toolbox`
     - `Optimization Toolbox`
     - `Parallel Computing Toolbox`
-- Python 3.9 or later with `scikit-learn` package installed.
+- Python 3.9 or later with `hdbscan` package installed.
 
 ```shell
 conda create -n hdbscan python=3.10
 conda activate hdbscan
 pip install scikit-learn
+pip install hdbscan
 ```
 
 ## How to use it
@@ -28,7 +29,7 @@ pip install scikit-learn
     - `Xcoords`: a n_channel x 1 double array of the x coordinates of each channel.
     - `Ycoords`: a n_channel x 1 double array of the y coordinates (depth) of each channel.
     - `Kcoords`: a n_channel x 1 double array of the shank index of each channel (not used so far).
-    - `PETH`: optional, a 1 x n double array of the peri-event time histogram. Used for validation.
+    - `PETH`: recommended but not required, a 1 x n double array of the peri-event time histogram.
 
 - The data should be saved in a `.mat` file and specified in the `settings.json`.
 - Edit the `settings.json` file to specify the `path_to_data`, `output_folder` and `path_to_python`.
@@ -75,6 +76,7 @@ pip install scikit-learn
 ## Notes
 
 - The project is still under development and fundamental changes may occur.
+- Be careful that the waveforms included in this analysis should not be whittened as Kilosort does. Do not use the waveforms extracted from `temp_wh.dat` directly. Do not use `whitening_mat_inv.npy` or `whitening_mat.npy` in Kilosort2.5 / Kilosort3 because they are not what Kilosort used to whitten the data (<https://github.com/cortex-lab/phy/issues/1040>)!
 - Please raise an issue if you meet any bugs or have any questions.
 
 ## References
