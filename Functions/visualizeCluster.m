@@ -13,7 +13,7 @@ sessions = sessions(idx_sort);
 locations = Output.Locations(units, 1:2);
 colors = winter(length(units));
 
-waveforms = waveformsAll.waveforms(units,:,:);
+waveforms = waveformsAll.waveforms_corrected(units,:,:);
 waveform_channels = waveformsAll.waveform_channels(units,:);
 
 ISI = cat(1, spikeInfo(units).ISI);
