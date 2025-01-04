@@ -6,7 +6,7 @@
 
     // parameters for estimating the location of each unit
     "spikeLocation":{
-       "location_algorithm": "monopolar_triangulation", // "monopolar_triangulation" or "center_of_mass"
+        "location_algorithm": "monopolar_triangulation", // "monopolar_triangulation" or "center_of_mass"
         "n_nearest_channels": 20 // number of channels used for spike location estimation
     },
     

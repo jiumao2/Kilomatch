@@ -202,7 +202,7 @@ for k = 1:length(idx_scatter)
     idx_scatter{k} = [1, k+1];
 end
 
-ax_scatter = EasyPlot.createGridAxes(fig, 1, length(idx_scatter),...
+ax_scatter = EasyPlot.createGridAxes(fig, 1, max(1, length(idx_scatter)),...
     'Width', 4,...
     'Height', 4,...
     'MarginLeft', 1,...
@@ -213,7 +213,7 @@ EasyPlot.align(ax_scatter, ax_similarity, 'horizontalCenter');
 EasyPlot.align(ax_scatter, ax_waveform, 'bottom');
 
 max_points = 5000;
-for k = 1:length(ax_scatter)
+for k = 1:length(idx_scatter)
     if length(similarity_unmatched{idx_scatter{k}(1)}) > max_points
         idx_plot = randperm(length(similarity_unmatched{idx_scatter{k}(1)}), max_points);
     else
@@ -245,7 +245,7 @@ for k = 1:length(ax_scatter)
     ylabel(ax_scatter{k}, similarity_names{idx_scatter{k}(2)});
 end
 
-EasyPlot.legend(ax_scatter{end}, {'Matched', 'Unmatched', 'This cluster'},...
+EasyPlot.legend(ax_scatter{end}, {'UnMatched', 'Matched', 'This cluster'},...
     'location', 'northeastoutside');
 
 h = EasyPlot.setGeneralTitle([{ax_depth}, ax_similarity(1,:)], ['Cluster #', num2str(cluster_id)],...

@@ -126,7 +126,7 @@ for k = 1:length(idx_scatter)
     idx_scatter{k} = [2, k+2];
 end
 
-ax_scatter = EasyPlot.createGridAxes(fig, 1, length(idx_scatter),...
+ax_scatter = EasyPlot.createGridAxes(fig, 1, max(1, length(idx_scatter)),...
     'Width', 3,...
     'Height', 3,...
     'MarginLeft', 1,...
@@ -136,7 +136,7 @@ EasyPlot.align(ax_scatter, ax_hist, 'horizontalCenter');
 EasyPlot.align(ax_scatter, ax_motion, 'top');
 
 max_points = 5000;
-for k = 1:length(ax_scatter)
+for k = 1:length(idx_scatter)
     if length(similarity_unmatched{idx_scatter{k}(1)}) > max_points
         idx_plot = randperm(length(similarity_unmatched{idx_scatter{k}(1)}), max_points);
     else
@@ -163,7 +163,7 @@ for k = 1:length(ax_scatter)
     ylabel(ax_scatter{k}, similarity_names{idx_scatter{k}(2)});
 end
 
-EasyPlot.legend(ax_scatter{end}, {'Matched', 'Unmatched'},...
+EasyPlot.legend(ax_scatter{end}, {'Unmatched', 'Matched'},...
     'location', 'northeastoutside');
 
 % plot the p(matched, delta_session)

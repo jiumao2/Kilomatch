@@ -65,8 +65,10 @@ parfor k = 1:n_pairs
     idx_block_A = findNearestPoint(depth_bins, spikeInfo(idx_B).Location(2));
     idx_block_B = findNearestPoint(depth_bins, spikeInfo(idx_A).Location(2));
     
-    similarity_waveform(k) = waveformSimilarityMotionCorrected(waveforms_corrected([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:));
-    similarity_raw_waveform(k) = waveformSimilarityMotionCorrected(waveforms([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:));
+    similarity_waveform(k) = waveformSimilarityMotionCorrected(waveforms_corrected([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:),...
+        user_settings.waveformCorrection.n_nearest_channels);
+    similarity_raw_waveform(k) = waveformSimilarityMotionCorrected(waveforms([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:),...
+        user_settings.waveformCorrection.n_nearest_channels);
     similarity_ISI(k) = ISI_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
     similarity_AutoCorr(k) = autocorrelogramSimilarity(spikeInfo(idx_A), spikeInfo(idx_B));
     similarity_PETH(k) = PETH_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));

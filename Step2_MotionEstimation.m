@@ -117,7 +117,7 @@ for iter = 1:user_settings.motionEstimation.n_iter
     writeNPY(distance_matrix, fullfile(user_settings.output_folder, 'DistanceMatrix.npy'));
     
     system([fullfile(user_settings.path_to_python), ' ',...
-        fullfile(path_kilomatch, 'Functions/hdbscan.py'), ' ',...
+        fullfile(path_kilomatch, 'Functions/main_hdbscan.py'), ' ',...
         fullfile(user_settings.output_folder, 'HDBSCAN_settings.json')]);
     
     idx_cluster_hdbscan = double(readNPY(fullfile(user_settings.output_folder, 'ClusterIndices.npy')));
@@ -160,12 +160,7 @@ for iter = 1:user_settings.motionEstimation.n_iter
 end
 
 similarity = sum(similarity_all.*weights, 2);
-edges = 0:0.05:5;
-hist_matched = histcounts(similarity(is_matched == 1), edges, 'Normalization', 'probability');
-hist_unmatched = histcounts(similarity(is_matched == 0), edges, 'Normalization', 'probability');
-hist_diff = hist_matched - hist_unmatched;
-idx_crossed = find(sign(hist_diff) > 0, 1);
-similarity_thres = edges(idx_crossed);
+similarity_thres = prctile(similarity(is_matched == 0), user_settings.autoCuration.good_prctile);
 
 idx_good = find(similarity' > similarity_thres & is_matched == 1);
 n_pairs_included = length(idx_good);
