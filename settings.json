@@ -34,6 +34,7 @@
     "motionEstimation":{
         "max_motion_distance": 80, // um. Unit pairs with distance larger than this value will not be included for motion estimation
         "features": ["Waveform", "AutoCorr", "ISI", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
+        "interpolate_algorithm": "Raw", // "Krig", "Raw", "Nearest" or "IDW". For computing the similarity between two units
         "n_iter": 10, // number of iterations for the clustering algorithm
         "n_block": 1 // 1 for rigid motion estimation
     },

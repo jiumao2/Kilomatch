@@ -52,7 +52,7 @@ parfor k = 1:n_pairs
     
     similarity_waveform(k) = waveformSimilarity(spikeInfo(idx_A), spikeInfo(idx_B),...
             user_settings.waveformCorrection.n_nearest_channels,...
-            user_settings.waveformCorrection.interpolate_algorithm);
+            user_settings.motionEstimation.interpolate_algorithm);
     similarity_ISI(k) = ISI_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
     similarity_AutoCorr(k) = autocorrelogramSimilarity(spikeInfo(idx_A), spikeInfo(idx_B));
     similarity_PETH(k) = PETH_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
