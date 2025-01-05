@@ -2,30 +2,22 @@
 disp('---------------Motion Estimation---------------');
 max_distance = user_settings.motionEstimation.max_motion_distance;
 
-idx_unit_pairs = zeros(1e8, 2);
-count = 0;
-
-progBar = ProgressBar(...
-    length(spikeInfo), ...
-    'Title', 'Getting unit pairs' ...
-    );
-for k = 1:length(spikeInfo)
-    for j = k+1:length(spikeInfo)  
-        if abs(spikeInfo(j).Location(2) - spikeInfo(k).Location(2)) > max_distance
-            continue
-        end
-        
-        count = count+1;
-        idx_unit_pairs(count,:) = [k,j];
-    end
-
-    progBar([], [], []);
+unit_locations = zeros(1, length(spikeInfo));
+for k = 1:length(unit_locations)
+    unit_locations(k) = spikeInfo(k).Location(2);
 end
-progBar.release();
 
-idx_unit_pairs = idx_unit_pairs(1:count,:);
-session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_unit_pairs(:,2)).SessionIndex]'];
+y_distance_matrix = abs(unit_locations - unit_locations');
+
+idx_col = floor((0:numel(y_distance_matrix)-1) ./ size(y_distance_matrix, 1))' + 1;
+idx_row = mod((0:numel(y_distance_matrix)-1), size(y_distance_matrix, 1))' + 1;
+idx_good = find(y_distance_matrix(:) <= max_distance & idx_col > idx_row);
+idx_unit_pairs = [idx_row(idx_good), idx_col(idx_good)];
+
 n_pairs = size(idx_unit_pairs, 1);
+
+% clear temp variables to save memory
+clear unit_locations y_distance_matrix idx_row idx_col idx_good;
 
 %%
 similarity_waveform = zeros(n_pairs, 1);
@@ -345,3 +337,6 @@ EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Motion
 
 % save data
 save(fullfile(user_settings.output_folder, 'Motion.mat'), 'positions', 'depth_bins', 'nblock', '-nocompression');
+
+% clear temp variables
+clear similarity similarity_all similarity_matrix similarity_waveform similarity_ISI similarity_AutoCorr similarity_PETH;

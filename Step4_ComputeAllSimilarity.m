@@ -1,37 +1,24 @@
 %% Recompute the similarities
 max_distance = user_settings.clustering.max_distance;
 
-idx_unit_pairs = zeros(1e8, 2);
-count = 0;
-
-progBar = ProgressBar(...
-    length(spikeInfo), ...
-    'Title', 'Getting unit pairs' ...
-    );
-for k = 1:length(spikeInfo)
-    for j = k+1:length(spikeInfo)
-        session_k = spikeInfo(k).SessionIndex;
-        session_j = spikeInfo(j).SessionIndex;
-
-        idx_block_j = findNearestPoint(depth_bins, spikeInfo(j).Location(2));
-        idx_block_k = findNearestPoint(depth_bins, spikeInfo(k).Location(2));
-        
-        if abs(spikeInfo(j).Location(2) - spikeInfo(k).Location(2) -...
-                (positions(idx_block_j, session_j) - positions(idx_block_k, session_k))) > max_distance
-            continue
-        end
-        
-        count = count+1;
-        idx_unit_pairs(count,:) = [k,j];
-    end
-
-    progBar([], [], []);
+corrected_locations = zeros(1, length(spikeInfo));
+for k = 1:length(corrected_locations)
+    idx_block = findNearestPoint(depth_bins, spikeInfo(k).Location(2));
+    corrected_locations(k) = spikeInfo(k).Location(2) - positions(idx_block, spikeInfo(k).SessionIndex);
 end
-progBar.release();
 
-idx_unit_pairs = idx_unit_pairs(1:count,:);
+y_distance_matrix = abs(corrected_locations - corrected_locations');
+
+idx_col = floor((0:numel(y_distance_matrix)-1) ./ size(y_distance_matrix, 1))' + 1;
+idx_row = mod((0:numel(y_distance_matrix)-1), size(y_distance_matrix, 1))' + 1;
+idx_good = find(y_distance_matrix(:) <= max_distance & idx_col > idx_row);
+idx_unit_pairs = [idx_row(idx_good), idx_col(idx_good)];
+
 session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_unit_pairs(:,2)).SessionIndex]'];
 n_pairs = size(idx_unit_pairs, 1);
+
+% clear temp variables to save memory
+clear corrected_locations y_distance_matrix idx_row idx_col idx_good;
 
 %%
 similarity_waveform = zeros(n_pairs, 1);
