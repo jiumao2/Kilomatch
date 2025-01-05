@@ -296,18 +296,18 @@ EasyPlot.setXLim(ax_colormap, [0.5, Output.NumUnits+0.5]);
 EasyPlot.setYLim(ax_colormap, [0.5, Output.NumUnits+0.5]);
 
 EasyPlot.setXTicksAndLabels(ax_colormap{1,1}, n_unit_cumsum, '');
-EasyPlot.setYTicksAndLabels(ax_colormap{1,1}, n_unit_cumsum, '');
-EasyPlot.setXTicksAndLabels(ax_colormap{2,1}, n_unit_cumsum, 1:n_session);
-EasyPlot.setYTicksAndLabels(ax_colormap{2,1}, n_unit_cumsum, '');
+EasyPlot.setYTicksAndLabels(ax_colormap{1,1}, n_unit_cumsum, [1, nan(1, n_session-2), n_session]);
+EasyPlot.setXTicksAndLabels(ax_colormap{1,2}, n_unit_cumsum, '');
+EasyPlot.setYTicksAndLabels(ax_colormap{1,2}, n_unit_cumsum, '');
 
-x_ticks_units = ax_colormap{1,2}.XTick;
-EasyPlot.setXTicksAndLabels(ax_colormap{1,2}, x_ticks_units, '');
-EasyPlot.setYTicksAndLabels(ax_colormap{1,2}, x_ticks_units, '');
-EasyPlot.setXTicksAndLabels(ax_colormap{2,2}, x_ticks_units, x_ticks_units);
+x_ticks_units = ax_colormap{2,1}.XTick;
+EasyPlot.setXTicksAndLabels(ax_colormap{2,1}, x_ticks_units, x_ticks_units);
+EasyPlot.setYTicksAndLabels(ax_colormap{2,1}, x_ticks_units, '');
+EasyPlot.setXTicksAndLabels(ax_colormap{2,2}, x_ticks_units, '');
 EasyPlot.setYTicksAndLabels(ax_colormap{2,2}, x_ticks_units, '');
 
-EasyPlot.xlabel(ax_colormap{2,1}, 'Sessions');
-EasyPlot.xlabel(ax_colormap{2,2}, 'Units (sorted)');
+EasyPlot.ylabel(ax_colormap{1,1}, 'Sessions');
+EasyPlot.xlabel(ax_colormap{2,1}, 'Units (sorted)');
 title(ax_colormap{1,1}, 'Matches');
 title(ax_colormap{1,2}, 'Similarity');
 
