@@ -2,7 +2,7 @@
     // please change the following paths to your own paths
     "path_to_data": ".\\spikeInfo.mat", // path to spikeInfo.mat
     "output_folder": ".\\kilomatchOutput", // output folder
-    "path_to_python": ".\\anaconda3\\envs\\py310\\python.exe", // path to python (3.9+) which has scikit-learn installed
+    "path_to_python": ".\\anaconda3\\envs\\py310\\python.exe", // path to python (3.9+) which has hdbscan installed
 
     // parameters for estimating the location of each unit
     "spikeLocation":{
@@ -32,7 +32,7 @@
 
     // parameters for motion estimation
     "motionEstimation":{
-        "max_motion_distance": 80, // um. Unit pairs with distance larger than this value will not be included for motion estimation
+        "max_motion_distance": 100, // um. Unit pairs with distance larger than this value will not be included for motion estimation
         "features": ["Waveform", "AutoCorr", "ISI", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
         "interpolate_algorithm": "Raw", // "Krig", "Raw", "Nearest" or "IDW". For computing the similarity between two units
         "n_iter": 10, // number of iterations for the clustering algorithm
@@ -41,14 +41,13 @@
 
     // parameters for clustering
     "clustering":{
-        "max_distance": 80, // um. Unit pairs with distance larger than this value will be considered as different clusters
+        "max_distance": 100, // um. Unit pairs with distance larger than this value will be considered as different clusters
         "features": ["Waveform", "AutoCorr", "ISI", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
         "n_iter": 10 // number of iterations for the clustering algorithm
     },
 
     // parameters for curating the clusters
     "autoCuration":{
-        "good_prctile": 99, // the percentile of the similarity distribution for unmatched clusters
         "reject_threshold": 0.1 // atanh() transform of the correlation coefficient. Good clusters should have all pair-wise similarity larger than this threshold
     }
 }

@@ -1,4 +1,4 @@
-reject_thres = user_settings.autoCuration.reject_threshold;
+reject_thres = user_settings.autoCuration.reject_threshold; 
 
 n_cluster = max(idx_cluster_hdbscan);
 fprintf('%d clusters and %d pairs before removing bad units!\n',...

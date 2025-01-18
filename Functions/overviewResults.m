@@ -107,12 +107,14 @@ EasyPlot.align(ax_hist, ax_session, 'top');
 EasyPlot.move(ax_hist, 'dx', 1.5);
 
 for k = 1:length(ax_hist)
-    histogram(ax_hist{k}, similarity_unmatched{k}, 'FaceColor', 'k', 'BinWidth', 0.2, 'Normalization', 'probability');
-    histogram(ax_hist{k}, similarity_matched{k}, 'FaceColor', 'b', 'BinWidth', 0.2, 'Normalization', 'probability');
+    histogram(ax_hist{k}, similarity_unmatched{k}, 'FaceColor', 'k', 'BinWidth', 0.1, 'Normalization', 'probability');
+    histogram(ax_hist{k}, similarity_matched{k}, 'FaceColor', 'b', 'BinWidth', 0.1, 'Normalization', 'probability');
     xlabel(ax_hist{k}, similarity_names{k});
 
     if k > 1
         title(ax_hist{k}, ['weight = ', num2str(Output.SimilarityWeights(k-1), '%.3f')]);
+    else
+        xline(ax_hist{k}, Output.SimilarityThreshold, 'k:', 'lineWidth', 2);
     end
 end
 

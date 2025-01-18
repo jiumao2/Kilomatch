@@ -187,8 +187,9 @@ is_this_cluster = arrayfun(@(x)temp_matrix(Output.SimilarityPairs(x,1), Output.S
 idx_this_cluster = find(is_this_cluster == 1);
 
 similarity = sum(Output.SimilarityAll.*Output.SimilarityWeights, 2);
-histogram(ax_similarity{1,1}, similarity(idx_unmatched), 'FaceColor', 'k', 'BinWidth', 0.2, 'Normalization', 'probability');
-histogram(ax_similarity{1,1}, similarity(idx_matched), 'FaceColor', 'b', 'BinWidth', 0.2, 'Normalization', 'probability');
+histogram(ax_similarity{1,1}, similarity(idx_unmatched), 'FaceColor', 'k', 'BinWidth', 0.1, 'Normalization', 'probability');
+histogram(ax_similarity{1,1}, similarity(idx_matched), 'FaceColor', 'b', 'BinWidth', 0.1, 'Normalization', 'probability');
+xline(ax_similarity{1,1}, Output.SimilarityThreshold, 'k:', 'lineWidth', 2);
 plot(ax_similarity{1,1}, similarity(idx_this_cluster), zeros(length(idx_this_cluster), 1), 'g.', 'MarkerSize', 3);
 
 for k = 1:length(similarity_names)

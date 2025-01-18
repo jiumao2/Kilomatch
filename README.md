@@ -9,7 +9,7 @@
     - `Statistics and Machine Learning Toolbox`
     - `Optimization Toolbox`
     - `Parallel Computing Toolbox`
-- Python 3.9 or later with `hdbscan` package installed.
+- Python 3.9 ~ 3.11 with `hdbscan` package installed.
 
 ```shell
 conda create -n hdbscan python=3.10
@@ -53,7 +53,7 @@ pip install hdbscan
     - `IdxCluster`: 1 x n_unit int array of the cluster index for each unit. `IdxCluster = -1` means the unit is not assigned to any cluster.
     - `ClusterMatrix`: a n_unit x n_unit logical matrix of the cluster assignment. `ClusterMatrix(i,j) = 1` means unit `i` and `j` are in the same cluster.
     - `MatchedPairs`: a n_pairs x 2 int matrix of the unit index for each pair of units in the same cluster.  
-    - `IdxSort`: a 1 x n_unit int array of the sorted index of the units computed from hierarchical clustering algorithm.
+    - `IdxSort`: a 1 x n_unit int array of the sorted index of the units computed from hierarchical clustering algorithm (single linkage + `optimalleaforder`).
 
     - `SimilarityNames`: a 1 x n_features cell of the names of the similarity metrics used in the analysis.
     - `SimilarityAll`: a n_pairs x n_features double matrix of the similarity between each pair of units. The pairs can be found in `SimilarityPairs`.
@@ -77,7 +77,8 @@ pip install hdbscan
 
 - The project is still under development and fundamental changes may occur.
 - Be careful that the waveforms included in this analysis should not be whittened as Kilosort does. Do not use the waveforms extracted from `temp_wh.dat` directly. Do not use `whitening_mat_inv.npy` or `whitening_mat.npy` in Kilosort2.5 / Kilosort3 because they are not what Kilosort used to whitten the data (<https://github.com/cortex-lab/phy/issues/1040>)!
-- Please raise an issue if you meet any bugs or have any questions.
+- Please raise an issue if you meet any bugs or have any questions. We are looking forward for your feedback!
+- This project is developed with Neuropixels 1.0 probe (staggered aligned channels). For multi-shank probes, `spikeInfo` should be generated for each shank.
 
 ## References
 
