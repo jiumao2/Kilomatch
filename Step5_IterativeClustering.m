@@ -94,11 +94,12 @@ end
 Z = double(readNPY(fullfile(user_settings.output_folder, 'LinkageMatrix.npy')));
 leafOrder = optimalleaforder(Z, distance_matrix);
 
-similarity = sum(similarity_all.*weights, 2);
-thres = prctile(similarity(is_matched == 0), user_settings.autoCuration.good_prctile);
+% set the threshold based on LDA results
+thres = mdl.Coeffs(1,2).Const ./ (-mdl.Coeffs(1,2).Linear(1)) .* weights(1);
 
+similarity = sum(similarity_all.*weights, 2);
 good_matches_matrix = zeros(size(similarity_matrix), 'logical');
-idx_good_matches = find((sum(similarity_all.*weights, 2) - thres) > 0);
+idx_good_matches = find(similarity > thres);
 for k = 1:length(idx_good_matches)
     good_matches_matrix(idx_unit_pairs(idx_good_matches(k), 1), idx_unit_pairs(idx_good_matches(k), 2)) = 1;
     good_matches_matrix(idx_unit_pairs(idx_good_matches(k), 2), idx_unit_pairs(idx_good_matches(k), 1)) = 1;

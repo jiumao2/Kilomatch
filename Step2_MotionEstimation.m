@@ -19,13 +19,12 @@ n_pairs = size(idx_unit_pairs, 1);
 % clear temp variables to save memory
 clear unit_locations y_distance_matrix idx_row idx_col idx_good;
 
-%%
+%% compute similarity
 similarity_waveform = zeros(n_pairs, 1);
 similarity_ISI = zeros(n_pairs, 1);
 similarity_AutoCorr = zeros(n_pairs, 1);
 similarity_PETH = zeros(n_pairs, 1);
 
-% compute similarity
 % start parallel pool
 if isempty(gcp('nocreate'))
     parpool();
@@ -151,9 +150,10 @@ for iter = 1:user_settings.motionEstimation.n_iter
     end
 end
 
-similarity = sum(similarity_all.*weights, 2);
-similarity_thres = prctile(similarity(is_matched == 0), user_settings.autoCuration.good_prctile);
+% set the threshold based on LDA results
+similarity_thres = mdl.Coeffs(1,2).Const ./ (-mdl.Coeffs(1,2).Linear(1)) .* weights(1);
 
+similarity = sum(similarity_all.*weights, 2);
 idx_good = find(similarity' > similarity_thres & is_matched == 1);
 n_pairs_included = length(idx_good);
 
