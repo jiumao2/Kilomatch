@@ -25,7 +25,7 @@ for k = 1:length(spikeInfo)
     location_new = location;
     location_new(2) = location_new(2) - dy;
 
-    distance_to_location = sqrt(sum((channel_locations - location(1:2)).^2, 2));
+    distance_to_location = sqrt(sum((channel_locations - location_new(1:2)).^2, 2));
     [~, idx_sort] = sort(distance_to_location);
     
     idx_included = idx_sort(1:n_nearest_channels);

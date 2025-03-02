@@ -19,21 +19,21 @@
 
     // autocorrelogram similarity related parameters
     "autoCorr":{
-        "window": 50, // ms
-        "gaussian_sigma": 5 // ms, for smoothing the autocorrelogram
+        "window": 500, // ms
+        "gaussian_sigma": 1 // ms, for smoothing the autocorrelogram
     },
 
     // ISI similarity related parameters
     "ISI":{
         "window": 100, // ms
         "binwidth": 1, // ms
-        "gaussian_sigma": 5 // ms, for smoothing the ISI histogram
+        "gaussian_sigma": 1 // ms, for smoothing the ISI histogram
     },
 
     // parameters for motion estimation
     "motionEstimation":{
         "max_motion_distance": 100, // um. Unit pairs with distance larger than this value will not be included for motion estimation
-        "features": ["Waveform", "AutoCorr", "ISI", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
+        "features": ["Waveform", "ISI", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
         "interpolate_algorithm": "Raw", // "Krig", "Raw", "Nearest" or "IDW". For computing the similarity between two units
         "n_iter": 10, // number of iterations for the clustering algorithm
         "n_block": 1 // 1 for rigid motion estimation
@@ -42,7 +42,7 @@
     // parameters for clustering
     "clustering":{
         "max_distance": 100, // um. Unit pairs with distance larger than this value will be considered as different clusters
-        "features": ["Waveform", "AutoCorr", "ISI", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
+        "features": ["Waveform", "ISI", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
         "n_iter": 10 // number of iterations for the clustering algorithm
     },
 

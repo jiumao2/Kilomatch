@@ -28,7 +28,7 @@ pip install hdbscan
     - `Waveform`: a n_channel x n_sample matrix of the mean waveform in uV. All units should share the same channels.
     - `Xcoords`: a n_channel x 1 double array of the x coordinates of each channel.
     - `Ycoords`: a n_channel x 1 double array of the y coordinates (depth) of each channel.
-    - `Kcoords`: a n_channel x 1 double array of the shank index of each channel (not used so far).
+    - `Kcoords`: a n_channel x 1 double array of the shank index of each channel. It is designed for multi-shank probes such as Neuropixels 2.0.
     - `PETH`: recommended but not required, a 1 x n double array of the peri-event time histogram.
 
 - The data should be saved in a `.mat` file and specified in the `settings.json`.
@@ -37,11 +37,12 @@ pip install hdbscan
 
 ### Run the code
 
-- Edit the `path_kilomatch` and `path_settings` in `mainKilomatch.m` and run.
+- Edit the `path_kilomatch` and `path_settings` in `mainKilomatch.m` or `mainKilomatchMultiShank.m` (for multi-shank probes such as Neuropixels 2.0) and run.
 
 ### About the output
 
 - All the temporary files, results, and figures will be saved in the `output_folder` specified in the `settings.json` file.
+- For multi-shank probes, each shank will have its own output folder as they were processed individually. 
 - The results will be saved in the `output_folder` as `Output.mat`, which will contain the following fields:
     - `NumUnits`: 1 x 1 int scalar of the number of units included in the analysis.
     - `NumSession`: 1 x 1 int scalar of the number of sessions included in the analysis.
@@ -77,8 +78,8 @@ pip install hdbscan
 
 - The project is still under development and fundamental changes may occur.
 - Be careful that the waveforms included in this analysis should not be whittened as Kilosort does. Do not use the waveforms extracted from `temp_wh.dat` directly. Do not use `whitening_mat_inv.npy` or `whitening_mat.npy` in Kilosort2.5 / Kilosort3 because they are not what Kilosort used to whitten the data (<https://github.com/cortex-lab/phy/issues/1040>)!
+- Please analyze individually for data from different brain regions like cortex and striatum since they might have different drifts and neuronal properties.
 - Please raise an issue if you meet any bugs or have any questions. We are looking forward for your feedback!
-- This project is developed with Neuropixels 1.0 probe (staggered aligned channels). For multi-shank probes, `spikeInfo` should be generated for each shank.
 
 ## References
 
