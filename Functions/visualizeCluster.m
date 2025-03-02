@@ -10,7 +10,7 @@ sessions = Output.Sessions(units);
 units = units(idx_sort);
 sessions = sessions(idx_sort);
 
-locations = Output.Locations(units, 1:2);
+locations = Output.Locations(units, 1:2) - Output.Motion(sessions)';
 colors = winter(length(units));
 
 waveforms = waveformsAll.waveforms_corrected(units,:,:);
