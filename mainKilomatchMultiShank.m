@@ -17,12 +17,20 @@ path_to_data = user_settings.path_to_data;
 shanks_data = arrayfun(@(x)x.Kcoords(x.Channel), spikeInfo);
 shankIDs = unique(spikeInfo(1).Kcoords);
 
-for i_shank = 1:length(shankID)
-    load(path_to_data);
+for i_shank = 1:length(shankIDs)
+    % Reload the data and only consider the current shank
+    load(fullfile(output_folder, 'spikeInfo.mat'));
     shankID = shankIDs(i_shank);
     spikeInfo = spikeInfo(shanks_data == shankID);
-
+    
+    % set the new output folders
     user_settings.output_folder = fullfile(output_folder, ['Shank', num2str(shankID)]);
+    if ~exist(fullfile(user_settings.output_folder), 'dir')
+        mkdir(fullfile(user_settings.output_folder));
+    end   
+    if ~exist(fullfile(user_settings.output_folder, 'Figures'), 'dir')
+        mkdir(fullfile(user_settings.output_folder, 'Figures'));
+    end
 
     Step2_MotionEstimation;
     Step3_ComputeWaveformFeatures;
@@ -32,7 +40,94 @@ for i_shank = 1:length(shankID)
     Step7_VisualizeClusters;
 end
 
+%% Combine the Output
+load(fullfile(output_folder, 'spikeInfo.mat'));
+n_session = max([spikeInfo.SessionIndex]);
 
+% Create an empty Output
+Output = struct(...
+    'NumCluster', 0,...
+    'NumUnits', length(spikeInfo),...
+    'Locations', zeros(length(spikeInfo), 3),...
+    'IdxSort', zeros(1, length(spikeInfo)),...
+    'IdxCluster', zeros(length(spikeInfo), 1),...
+    'SimilarityMatrix', zeros(length(spikeInfo)),...
+    'SimilarityAll', [],...
+    'SimilarityPairs', [],...
+    'SimilarityNames', {user_settings.clustering.features'},...
+    'SimilarityWeights', [],...
+    'SimilarityThreshold', [],...
+    'GoodMatchesMatrix', zeros(length(spikeInfo)),...
+    'ClusterMatrix', zeros(length(spikeInfo)),...
+    'MatchedPairs', [],...
+    'Params', user_settings,...
+    'NumSession', n_session,...
+    'Sessions', zeros(1, length(spikeInfo)),...
+    'Motion', [],...
+    'Nblock', user_settings.motionEstimation.n_block,...
+    'DistanceMatrix', zeros(length(spikeInfo)),...
+    'WaveformSimilarityMatrix', zeros(length(spikeInfo)),...
+    'RawWaveformSimilarityMatrix', zeros(length(spikeInfo)),...
+    'ISI_SimilarityMatrix', zeros(length(spikeInfo)),...
+    'AutoCorrSimilalrityMatrix', zeros(length(spikeInfo)),...
+    'PETH_SimilarityMatrix', zeros(length(spikeInfo)));
 
+waveform_channels = zeros(length(spikeInfo), user_settings.waveformCorrection.n_channels_precomputed);
+waveforms = zeros(length(spikeInfo), user_settings.waveformCorrection.n_channels_precomputed, size(spikeInfo(1).Waveform, 2));
+waveforms_corrected = zeros(length(spikeInfo), user_settings.waveformCorrection.n_channels_precomputed, size(spikeInfo(1).Waveform, 2));
 
+n_cluster = 0;
+n_units = 0;
+for i_shank = 1:length(shankIDs)
+    shankID = shankIDs(i_shank);
+
+    fprintf('Loading Output from shank %d ...\n', shankID);
+    data = load(fullfile(output_folder, ['Shank', num2str(shankID)], 'Output.mat'));
+    data_waveforms = load(fullfile(output_folder, ['Shank', num2str(shankID)], 'Waveforms.mat'));
+    idx_units = find(shanks_data == shankID);
+
+    Output.Locations(idx_units, :) = data.Output.Locations;
+    Output.IdxSort(idx_units) = data.Output.IdxSort + n_cluster;
+
+    Output.IdxCluster(idx_units) = data.Output.IdxCluster + n_cluster;
+    Output.IdxCluster(idx_units(data.Output.IdxCluster == -1)) = -1;
+    Output.SimilarityMatrix(idx_units, idx_units) = data.Output.SimilarityMatrix;
+    Output.SimilarityAll = [Output.SimilarityAll; data.Output.SimilarityAll];
+
+    similarity_pairs = arrayfun(@(x)idx_units(x), data.Output.SimilarityPairs);
+    Output.SimilarityPairs = [Output.SimilarityPairs; similarity_pairs];
+
+    Output.SimilarityWeights = [Output.SimilarityWeights; data.Output.SimilarityWeights];
+    Output.SimilarityThreshold = [Output.SimilarityThreshold; data.Output.SimilarityThreshold];
+    Output.GoodMatchesMatrix(idx_units, idx_units) = data.Output.GoodMatchesMatrix;
+    Output.ClusterMatrix(idx_units, idx_units) = data.Output.ClusterMatrix;
+
+    matched_pairs = arrayfun(@(x)idx_units(x), data.Output.MatchedPairs);
+    Output.MatchedPairs = [Output.MatchedPairs; matched_pairs];
+
+    Output.Sessions(idx_units) = data.Output.Sessions;
+    Output.Motion = [Output.Motion; data.Output.Motion];
+
+    Output.RunTime = data.Output.RunTime; % save the run time of the final shank
+
+    Output.DistanceMatrix(idx_units, idx_units) = data.Output.DistanceMatrix;
+    Output.WaveformSimilarityMatrix(idx_units, idx_units) = data.Output.WaveformSimilarityMatrix;
+    Output.RawWaveformSimilarityMatrix(idx_units, idx_units) = data.Output.RawWaveformSimilarityMatrix;
+    Output.ISI_SimilarityMatrix(idx_units, idx_units) = data.Output.ISI_SimilarityMatrix;
+    Output.AutoCorrSimilalrityMatrix(idx_units, idx_units) = data.Output.AutoCorrSimilalrityMatrix;
+    Output.PETH_SimilarityMatrix(idx_units, idx_units) = data.Output.PETH_SimilarityMatrix;
+
+    % update waveforms
+    waveform_channels(idx_units,:) = data_waveforms.waveform_channels;
+    waveforms(idx_units,:,:) = data_waveforms.waveforms;
+    waveforms_corrected(idx_units,:,:) = data_waveforms.waveforms_corrected;
+
+    n_cluster = n_cluster + data.Output.NumClusters;
+end
+
+Output.NumClusters = n_cluster;
+
+fprintf('Saving Output to %s ...\n', fullfile(output_folder, 'Output.mat'));
+save(fullfile(output_folder, 'Output.mat'), 'Output', '-nocompression');
+save(fullfile(output_folder, 'Waveforms.mat'), 'waveform_channels', 'waveforms', 'waveforms_corrected', '-nocompression');
 
