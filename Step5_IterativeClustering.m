@@ -107,11 +107,13 @@ end
 good_matches_matrix(eye(size(good_matches_matrix)) == 1) = 1;
 
 %% Save the results
-save(fullfile(user_settings.output_folder, 'ClusteringResults.mat'),...
-    'sessions', 'n_session', 'weights', 'similarity_names', 'similarity_all',...
-    'thres', 'good_matches_matrix',...
-    'similarity_matrix', 'distance_matrix', 'leafOrder',...
-    'HDBSCAB_settings', 'idx_cluster_hdbscan', 'hdbscan_matrix', 'n_cluster', '-nocompression');
+if user_settings.save_intermediate_results
+    save(fullfile(user_settings.output_folder, 'ClusteringResults.mat'),...
+        'sessions', 'n_session', 'weights', 'similarity_names', 'similarity_all',...
+        'thres', 'good_matches_matrix',...
+        'similarity_matrix', 'distance_matrix', 'leafOrder',...
+        'HDBSCAB_settings', 'idx_cluster_hdbscan', 'hdbscan_matrix', 'n_cluster', '-nocompression');
+end
 
 %% Plot the similarity histogram
 fig = EasyPlot.figure();
@@ -129,7 +131,10 @@ xlabel(ax, 'Similarity');
 ylabel(ax, 'Probability');
 
 EasyPlot.cropFigure(fig);
-EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/SummedSimilarityDistribution'));
+
+if user_settings.save_figures
+    EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/SummedSimilarityDistribution'));
+end
 %% Plot the results
 fig = EasyPlot.figure();
 ax_all = EasyPlot.createGridAxes(fig, 1, 3,...
@@ -157,6 +162,8 @@ title(ax_all{3}, 'Similarity matrix');
 linkaxes([ax_all{1}, ax_all{2}, ax_all{3}]);
 
 EasyPlot.cropFigure(fig);
-EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/ClusteringResult'));
 
+if user_settings.save_figures
+    EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/ClusteringResult'));
+end
 

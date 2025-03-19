@@ -4,28 +4,31 @@ n_cluster = max(idx_cluster_hdbscan);
 fprintf('%d clusters and %d pairs before removing bad units!\n',...
     n_cluster, (sum(hdbscan_matrix(:)) - size(hdbscan_matrix, 1))/2);
 
+hdbscan_matrix_raw = hdbscan_matrix;
+
 % split a cluster if there is a clear boundary in good_matches_matrix
-n_cluster_new = n_cluster;
-for k = 1:n_cluster
-    units = find(idx_cluster_hdbscan == k);
-    graph_this = graph(good_matches_matrix(units, units));
-    idx_sub_clusters = conncomp(graph_this);
-
-    n_sub_clusters = max(idx_sub_clusters);
-    if n_sub_clusters <= 1
-        continue
+if user_settings.autoCuration.auto_split
+    n_cluster_new = n_cluster;
+    for k = 1:n_cluster
+        units = find(idx_cluster_hdbscan == k);
+        graph_this = graph(good_matches_matrix(units, units));
+        idx_sub_clusters = conncomp(graph_this);
+    
+        n_sub_clusters = max(idx_sub_clusters);
+        if n_sub_clusters <= 1
+            continue
+        end
+        for j = 2:n_sub_clusters
+            units_this = units(idx_sub_clusters == j);
+            idx_cluster_hdbscan(units_this) = n_cluster_new+j-1;
+        end
+    
+        n_cluster_new = n_cluster_new + n_sub_clusters - 1;
     end
-    for j = 2:n_sub_clusters
-        units_this = units(idx_sub_clusters == j);
-        idx_cluster_hdbscan(units_this) = n_cluster_new+j-1;
-    end
-
-    n_cluster_new = n_cluster_new + n_sub_clusters - 1;
+    n_cluster = n_cluster_new;
 end
-n_cluster = n_cluster_new;
 
 % remove bad units in the cluster if any similarity < reject_thres
-hdbscan_matrix_raw = hdbscan_matrix;
 for k = 1:n_cluster
     units = find(idx_cluster_hdbscan == k);
     sessions_this = sessions(units);
@@ -97,80 +100,9 @@ fprintf('%d clusters and %d pairs after removing bad units!\n',...
     n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
 
 % merge when two or more adjacent clusters are similar and do not contain units from the same sessions
-
-% compute the location of each clusters
-hdbscan_matrix_raw = hdbscan_matrix;
-cluster_centers = zeros(1,n_cluster);
-for k = 1:n_cluster
-    units = find(idx_cluster_hdbscan == k);
-    temp = arrayfun(@(x)find(leafOrder == x), units);
-    cluster_centers(k) = median(temp);
-end
-[~, cluster_id_sorted] = sort(cluster_centers);
-
-flag = true;
-while flag
-    similar_pairs = []; % idA, idB, similarity
-    flag = false;
-    for k = 1:length(cluster_id_sorted)-1
-        id = cluster_id_sorted(k);
-        units = find(idx_cluster_hdbscan == id);
-        sessions_this = sessions(units);
-
-        id_next = cluster_id_sorted(k+1);
-        units_next = find(idx_cluster_hdbscan == id_next);
-        sessions_next = sessions(units_next);
-        if ~isempty(intersect(sessions_this, sessions_next))
-            continue
-        end
-        
-        if any(similarity_matrix(units, units_next) < reject_thres, 'all')
-            continue
-        end
-
-        if ~any(good_matches_matrix(units, units_next) > 0, 'all')
-            continue
-        end
-        
-        similar_pairs = [similar_pairs; k, k+1, median(similarity_matrix(units, units_next), 'all')];
-    end
-    
-    if ~isempty(similar_pairs)
-        fprintf('Found %d possible merges!\n', sum(similar_pairs(:,3) > reject_thres));
-    end
-
-    % merging
-    for k = 1:size(similar_pairs, 1)
-        if similar_pairs(k,3) <= reject_thres
-            continue
-        end
-
-        if k < size(similar_pairs, 1) &&...
-                similar_pairs(k+1, 1) == similar_pairs(k,2) &&...
-                similar_pairs(k+1, 3) > similar_pairs(k,3)
-            continue
-        end
-        
-        flag = true;
-
-        id = cluster_id_sorted(similar_pairs(k,1));
-        id_next = cluster_id_sorted(similar_pairs(k,2));
-        idx_cluster_hdbscan(idx_cluster_hdbscan == id_next) = id;
-    end
-
-    % update cluster info
-    max_id = max(idx_cluster_hdbscan);
-    for k = max_id:-1:1
-        units = find(idx_cluster_hdbscan == k);
-        if isempty(units)
-            idx_cluster_hdbscan(idx_cluster_hdbscan>=k) = idx_cluster_hdbscan(idx_cluster_hdbscan>=k)-1;
-        end
-    end
-
-    n_cluster = max(idx_cluster_hdbscan);
-    assert(length(unique(idx_cluster_hdbscan)) == n_cluster+1);
-
-    % update cluster centers
+if user_settings.autoCuration.auto_merge
+    % compute the location of each clusters
+    hdbscan_matrix_raw = hdbscan_matrix;
     cluster_centers = zeros(1,n_cluster);
     for k = 1:n_cluster
         units = find(idx_cluster_hdbscan == k);
@@ -178,86 +110,159 @@ while flag
         cluster_centers(k) = median(temp);
     end
     [~, cluster_id_sorted] = sort(cluster_centers);
-end
-
-% update hdbscan matrix
-hdbscan_matrix = zeros(size(similarity_matrix), 'logical');
-for k = 1:n_cluster
-    idx = find(idx_cluster_hdbscan == k);
-    for j = 1:length(idx)
-        for i = j+1:length(idx)
-            hdbscan_matrix(idx(j), idx(i)) = 1;
-            hdbscan_matrix(idx(i), idx(j)) = 1;
-        end
-    end
-end
-hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
-
-[num_same, num_before, num_after] = graphEditNumber(hdbscan_matrix_raw, hdbscan_matrix);
-assert(num_same == num_before);
-
-fprintf('%d merging steps are done!\n', -num_before+num_after);
-fprintf('%d clusters and %d pairs after merging good clusters!\n',...
-    n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
-
-% find possible pairings for unpaired units
-disp('Checking the unpaired units!');
-
-count_merges = 0;
-
-n_cluster_new = n_cluster;
-flag_match = true;
-
-while flag_match
-    flag_match =  false;
-    idx_unpaired = find(idx_cluster_hdbscan == -1);
-    for k = 1:length(idx_unpaired)
-        unit = idx_unpaired(k);
-        session_this = sessions(unit);
     
-        idx_match = find(good_matches_matrix(unit,:) == 1);
-
-        if isempty(idx_match)
-            continue
+    flag = true;
+    while flag
+        similar_pairs = []; % idA, idB, similarity
+        flag = false;
+        for k = 1:length(cluster_id_sorted)-1
+            id = cluster_id_sorted(k);
+            units = find(idx_cluster_hdbscan == id);
+            sessions_this = sessions(units);
+    
+            id_next = cluster_id_sorted(k+1);
+            units_next = find(idx_cluster_hdbscan == id_next);
+            sessions_next = sessions(units_next);
+            if ~isempty(intersect(sessions_this, sessions_next))
+                continue
+            end
+            
+            if any(similarity_matrix(units, units_next) < reject_thres, 'all')
+                continue
+            end
+    
+            if ~any(good_matches_matrix(units, units_next) > 0, 'all')
+                continue
+            end
+            
+            similar_pairs = [similar_pairs; k, k+1, median(similarity_matrix(units, units_next), 'all')];
         end
         
-        [~, temp] = max(similarity_matrix(k, idx_match));
-        idx_match = idx_match(temp);
-        idx_cluster_new = idx_cluster_hdbscan(idx_match);
-        
-        if idx_cluster_new == -1
-            continue
+        if ~isempty(similar_pairs)
+            fprintf('Found %d possible merges!\n', sum(similar_pairs(:,3) > reject_thres));
         end
-        if any(session_this == sessions(idx_cluster_hdbscan == idx_cluster_new))
-            continue
+    
+        % merging
+        for k = 1:size(similar_pairs, 1)
+            if similar_pairs(k,3) <= reject_thres
+                continue
+            end
+    
+            if k < size(similar_pairs, 1) &&...
+                    similar_pairs(k+1, 1) == similar_pairs(k,2) &&...
+                    similar_pairs(k+1, 3) > similar_pairs(k,3)
+                continue
+            end
+            
+            flag = true;
+    
+            id = cluster_id_sorted(similar_pairs(k,1));
+            id_next = cluster_id_sorted(similar_pairs(k,2));
+            idx_cluster_hdbscan(idx_cluster_hdbscan == id_next) = id;
         end
-        
-        flag_match = true;
-        count_merges = count_merges+1;
-        idx_cluster_hdbscan(unit) = idx_cluster_new;
+    
+        % update cluster info
+        max_id = max(idx_cluster_hdbscan);
+        for k = max_id:-1:1
+            units = find(idx_cluster_hdbscan == k);
+            if isempty(units)
+                idx_cluster_hdbscan(idx_cluster_hdbscan>=k) = idx_cluster_hdbscan(idx_cluster_hdbscan>=k)-1;
+            end
+        end
+    
+        n_cluster = max(idx_cluster_hdbscan);
+        assert(length(unique(idx_cluster_hdbscan)) == n_cluster+1);
+    
+        % update cluster centers
+        cluster_centers = zeros(1,n_cluster);
+        for k = 1:n_cluster
+            units = find(idx_cluster_hdbscan == k);
+            temp = arrayfun(@(x)find(leafOrder == x), units);
+            cluster_centers(k) = median(temp);
+        end
+        [~, cluster_id_sorted] = sort(cluster_centers);
     end
-end
-n_cluster = n_cluster_new;
-fprintf('Merged %d unpaired units!\n', count_merges);
-
-% update hdbscan matrix
-hdbscan_matrix = zeros(size(similarity_matrix), 'logical');
-for k = 1:n_cluster
-    idx = find(idx_cluster_hdbscan == k);
-    for j = 1:length(idx)
-        for i = j+1:length(idx)
-            hdbscan_matrix(idx(j), idx(i)) = 1;
-            hdbscan_matrix(idx(i), idx(j)) = 1;
+    
+    % update hdbscan matrix
+    hdbscan_matrix = zeros(size(similarity_matrix), 'logical');
+    for k = 1:n_cluster
+        idx = find(idx_cluster_hdbscan == k);
+        for j = 1:length(idx)
+            for i = j+1:length(idx)
+                hdbscan_matrix(idx(j), idx(i)) = 1;
+                hdbscan_matrix(idx(i), idx(j)) = 1;
+            end
         end
     end
-end
-hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
-
-fprintf('%d clusters and %d pairs after merging good unpaired units!\n',...
-    n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
+    hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
+    
+    [num_same, num_before, num_after] = graphEditNumber(hdbscan_matrix_raw, hdbscan_matrix);
+    assert(num_same == num_before);
+    
+    fprintf('%d merging steps are done!\n', -num_before+num_after);
+    fprintf('%d clusters and %d pairs after merging good clusters!\n',...
+        n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
+    
+    % find possible pairings for unpaired units
+    disp('Checking the unpaired units!');
+    
+    count_merges = 0;
+    
+    n_cluster_new = n_cluster;
+    flag_match = true;
+    
+    while flag_match
+        flag_match =  false;
+        idx_unpaired = find(idx_cluster_hdbscan == -1);
+        for k = 1:length(idx_unpaired)
+            unit = idx_unpaired(k);
+            session_this = sessions(unit);
+        
+            idx_match = find(good_matches_matrix(unit,:) == 1);
+    
+            if isempty(idx_match)
+                continue
+            end
+            
+            [~, temp] = max(similarity_matrix(k, idx_match));
+            idx_match = idx_match(temp);
+            idx_cluster_new = idx_cluster_hdbscan(idx_match);
+            
+            if idx_cluster_new == -1
+                continue
+            end
+            if any(session_this == sessions(idx_cluster_hdbscan == idx_cluster_new))
+                continue
+            end
+            
+            flag_match = true;
+            count_merges = count_merges+1;
+            idx_cluster_hdbscan(unit) = idx_cluster_new;
+        end
+    end
+    n_cluster = n_cluster_new;
+    fprintf('Merged %d unpaired units!\n', count_merges);
+    
+    % update hdbscan matrix
+    hdbscan_matrix = zeros(size(similarity_matrix), 'logical');
+    for k = 1:n_cluster
+        idx = find(idx_cluster_hdbscan == k);
+        for j = 1:length(idx)
+            for i = j+1:length(idx)
+                hdbscan_matrix(idx(j), idx(i)) = 1;
+                hdbscan_matrix(idx(i), idx(j)) = 1;
+            end
+        end
+    end
+    hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
+    
+    fprintf('%d clusters and %d pairs after merging good unpaired units!\n',...
+        n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
+end    
 
 hdbscan_matrix_curated = hdbscan_matrix;
 idx_cluster_hdbscan_curated = idx_cluster_hdbscan;
+
 
 %% get all matched pairs
 matched_pairs_curated = [];
@@ -270,9 +275,11 @@ for k = 1:length(hdbscan_matrix_curated)
 end
 
 %% save the curated result
-save(fullfile(user_settings.output_folder, 'CurationResults.mat'),...
-    'hdbscan_matrix_curated', 'idx_cluster_hdbscan_curated', 'matched_pairs_curated',...
-    'similarity_matrix', 'sessions', 'leafOrder', '-nocompression');
+if user_settings.save_intermediate_results
+    save(fullfile(user_settings.output_folder, 'CurationResults.mat'),...
+        'hdbscan_matrix_curated', 'idx_cluster_hdbscan_curated', 'matched_pairs_curated',...
+        'similarity_matrix', 'sessions', 'leafOrder', '-nocompression');
+end
 
 % Plot the final results
 fig = EasyPlot.figure();
@@ -299,8 +306,10 @@ title(ax_all{2}, 'Similarity matrix');
 linkaxes([ax_all{1}, ax_all{2}]);
 
 EasyPlot.cropFigure(fig);
-EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/CuratedResult'));
 
+if user_settings.save_figures
+    EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/CuratedResult'));
+end
 %% save the final output
 % construct a similarity matrix for each feature
 DistanceMatrix = NaN(length(idx_cluster_hdbscan_curated));
@@ -350,6 +359,7 @@ Output.NumSession = max(sessions);
 Output.Sessions = sessions;
 Output.Motion = positions;
 Output.Nblock = nblock;
+Output.RunTime = toc;
 
 % The features used / unused in Kilomatch that might be useful in manual curation
 Output.DistanceMatrix = DistanceMatrix;

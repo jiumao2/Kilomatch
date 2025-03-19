@@ -56,8 +56,10 @@ fprintf('Computing similarity done! Saved to %s ...\n', fullfile(user_settings.o
 toc;
 
 % save the similarity
-save(fullfile(user_settings.output_folder, 'SimilarityForCorretion.mat'),...
-    'similarity_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH', 'idx_unit_pairs', '-nocompression');
+if user_settings.save_intermediate_results
+    save(fullfile(user_settings.output_folder, 'SimilarityForCorretion.mat'),...
+        'similarity_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH', 'idx_unit_pairs', '-nocompression');
+end
 
 %% Pre-clustering
 n_unit = length(spikeInfo);
@@ -172,7 +174,10 @@ ylabel(ax_similarity, 'Prob.');
 histogram(ax_similarity, similarity, 'BinWidth', 0.2, 'Normalization', 'probability');
 title(ax_similarity, [num2str(n_pairs_included), ' pairs are included']);
 EasyPlot.cropFigure(fig);
-EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/SimilarityThresholdForCorrection'));
+
+if user_settings.save_figures
+    EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/SimilarityThresholdForCorrection'));
+end
 
 fprintf('%d pairs of units are included for drift estimation!\n', n_pairs_included);
 
@@ -333,10 +338,14 @@ xlim(ax_distance, [depth_edges(1), depth_edges(end)]);
 ylim(ax_distance, [min(dx), max(dx)]);
 
 EasyPlot.cropFigure(fig);
-EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Motion'));
+if user_settings.save_figures
+    EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Motion'));
+end
 
 % save data
-save(fullfile(user_settings.output_folder, 'Motion.mat'), 'positions', 'depth_bins', 'nblock', '-nocompression');
+if user_settings.save_intermediate_results
+    save(fullfile(user_settings.output_folder, 'Motion.mat'), 'positions', 'depth_bins', 'nblock', '-nocompression');
+end
 
 % clear temp variables
 clear similarity similarity_all similarity_matrix similarity_waveform similarity_ISI similarity_AutoCorr similarity_PETH;

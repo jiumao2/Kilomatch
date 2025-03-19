@@ -3,6 +3,9 @@
     "path_to_data": ".\\spikeInfo.mat", // path to spikeInfo.mat
     "output_folder": ".\\kilomatchOutput", // output folder
     "path_to_python": ".\\anaconda3\\envs\\py310\\python.exe", // path to python (3.9+) which has hdbscan installed
+    "save_intermediate_results": false, // whether to save the intermediate results
+    "save_figures": false, // whether to save the figures
+    "plot_clusters": false, // whether to plot each cluster
 
     // parameters for estimating the location of each unit
     "spikeLocation":{
@@ -19,8 +22,8 @@
 
     // autocorrelogram similarity related parameters
     "autoCorr":{
-        "window": 500, // ms
-        "gaussian_sigma": 1 // ms, for smoothing the autocorrelogram
+        "window": 300, // ms
+        "gaussian_sigma": 5 // ms, for smoothing the autocorrelogram
     },
 
     // ISI similarity related parameters
@@ -33,7 +36,7 @@
     // parameters for motion estimation
     "motionEstimation":{
         "max_motion_distance": 100, // um. Unit pairs with distance larger than this value will not be included for motion estimation
-        "features": ["Waveform", "ISI", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
+        "features": ["Waveform", "AutoCorr", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
         "interpolate_algorithm": "Raw", // "Krig", "Raw", "Nearest" or "IDW". For computing the similarity between two units
         "n_iter": 10, // number of iterations for the clustering algorithm
         "n_block": 1 // 1 for rigid motion estimation
@@ -42,13 +45,15 @@
     // parameters for clustering
     "clustering":{
         "max_distance": 100, // um. Unit pairs with distance larger than this value will be considered as different clusters
-        "features": ["Waveform", "ISI", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
+        "features": ["Waveform", "AutoCorr", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
         "n_iter": 10 // number of iterations for the clustering algorithm
     },
 
     // parameters for curating the clusters
     "autoCuration":{
-        "reject_threshold": 0.1 // atanh() transform of the correlation coefficient. Good clusters should have all pair-wise similarity larger than this threshold
+        "reject_threshold": 0.1, // atanh() transform of the correlation coefficient. Good clusters should have all pair-wise similarity larger than this threshold
+        "auto_split": true, // whether to split the clusters automatically
+        "auto_merge": true // whether to merge the clusters automatically
     }
 }
 

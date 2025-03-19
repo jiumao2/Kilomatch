@@ -70,9 +70,11 @@ progBar.release();
 fprintf('Computing similarity done! Saved to %s ...\n', fullfile(user_settings.output_folder, 'AllSimilarity.mat'));
 toc;
 
-save(fullfile(user_settings.output_folder, 'AllSimilarity.mat'),...
-    'similarity_waveform', 'similarity_raw_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH',...
-    'distance', 'idx_unit_pairs', 'session_pairs', '-nocompression');
+if user_settings.save_intermediate_results
+    save(fullfile(user_settings.output_folder, 'AllSimilarity.mat'),...
+        'similarity_waveform', 'similarity_raw_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH',...
+        'distance', 'idx_unit_pairs', 'session_pairs', '-nocompression');
+end
 
 %%
 fig = EasyPlot.figure();
@@ -119,5 +121,8 @@ ylabel(ax_PETH, 'Prob.');
 EasyPlot.setYLim({ax_waveform, ax_autoCorr, ax_ISI, ax_PETH});
 
 EasyPlot.cropFigure(fig);
-EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/AllSimilarity'));
+
+if user_settings.save_figures
+    EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/AllSimilarity'));
+end
 
