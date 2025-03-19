@@ -41,12 +41,23 @@ parfor k = 1:n_pairs
     idx_A = idx_unit_pairs(k,1);
     idx_B = idx_unit_pairs(k,2);
     
-    similarity_waveform(k) = waveformSimilarity(spikeInfo(idx_A), spikeInfo(idx_B),...
-            user_settings.waveformCorrection.n_nearest_channels,...
-            user_settings.motionEstimation.interpolate_algorithm);
-    similarity_ISI(k) = ISI_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
-    similarity_AutoCorr(k) = autocorrelogramSimilarity(spikeInfo(idx_A), spikeInfo(idx_B));
-    similarity_PETH(k) = PETH_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    if any(strcmpi(user_settings.motionEstimation.features, 'Waveform'))
+        similarity_waveform(k) = waveformSimilarity(spikeInfo(idx_A), spikeInfo(idx_B),...
+                user_settings.waveformCorrection.n_nearest_channels,...
+                user_settings.motionEstimation.interpolate_algorithm);
+    end
+    
+    if any(strcmpi(user_settings.motionEstimation.features, 'ISI'))
+        similarity_ISI(k) = ISI_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    end
+    
+    if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr'))
+        similarity_AutoCorr(k) = autocorrelogramSimilarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    end
+    
+    if any(strcmpi(user_settings.motionEstimation.features, 'PETH'))
+        similarity_PETH(k) = PETH_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+    end
     
     updateParallel(1);
 end

@@ -58,27 +58,34 @@ parfor k = 1:length(spikeInfo)
     [~, idx_max] = max(max(spikeInfo(k).Waveform, [], 2) - min(spikeInfo(k).Waveform, [], 2));
     spikeInfo(k).Channel = idx_max;
     
-    % compute the autocorrelogram feauture
     spike_times = spikeInfo(k).SpikeTimes;
-    window = user_settings.autoCorr.window; % ms   
-    s = binTimings(spike_times, 1);
-    
-    [auto_corr, lag] = xcorr(s, s, window);
-    auto_corr(lag==0)=0;
-    auto_corr(lag>0) = smoothdata(auto_corr(lag>0), 'gaussian', 5*user_settings.autoCorr.gaussian_sigma);
-    auto_corr(lag<0) = smoothdata(auto_corr(lag<0), 'gaussian', 5*user_settings.autoCorr.gaussian_sigma);
-    auto_corr = auto_corr./max(auto_corr);
-    
-    spikeInfo(k).AutoCorr = auto_corr;
+
+    % compute the autocorrelogram feauture
+    if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr')) ||...
+            any(strcmpi(user_settings.clustering.features, 'AutoCorr'))
+        window = user_settings.autoCorr.window; % ms   
+        s = binTimings(spike_times, 1);
+        
+        [auto_corr, lag] = xcorr(s, s, window);
+        auto_corr(lag==0)=0;
+        auto_corr(lag>0) = smoothdata(auto_corr(lag>0), 'gaussian', 5*user_settings.autoCorr.gaussian_sigma);
+        auto_corr(lag<0) = smoothdata(auto_corr(lag<0), 'gaussian', 5*user_settings.autoCorr.gaussian_sigma);
+        auto_corr = auto_corr./max(auto_corr);
+        
+        spikeInfo(k).AutoCorr = auto_corr;
+    end
 
     % compute the ISI feature
-    isi = diff(spike_times);
-    isi_hist = histcounts(isi,...
-        'BinLimits', [0, user_settings.ISI.window],...
-        'BinWidth', user_settings.ISI.binwidth);
-    isi_freq = isi_hist./sum(isi_hist);
-    isi_freq_smoothed = smoothdata(isi_freq, 'gaussian', 5*user_settings.ISI.gaussian_sigma);
-    spikeInfo(k).ISI = isi_freq_smoothed;
+    if any(strcmpi(user_settings.motionEstimation.features, 'ISI')) ||...
+            any(strcmpi(user_settings.clustering.features, 'ISI'))
+        isi = diff(spike_times);
+        isi_hist = histcounts(isi,...
+            'BinLimits', [0, user_settings.ISI.window],...
+            'BinWidth', user_settings.ISI.binwidth);
+        isi_freq = isi_hist./sum(isi_hist);
+        isi_freq_smoothed = smoothdata(isi_freq, 'gaussian', 5*user_settings.ISI.gaussian_sigma);
+        spikeInfo(k).ISI = isi_freq_smoothed;
+    end
 
     updateParallel(1);
 end
