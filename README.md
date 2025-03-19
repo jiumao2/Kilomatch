@@ -42,7 +42,7 @@ pip install hdbscan
 ### About the output
 
 - All the temporary files, results, and figures will be saved in the `output_folder` specified in the `settings.json` file.
-- For multi-shank probes, each shank will have its own output folder as they were processed individually. 
+- For multi-shank probes, each shank will have its own output folder as they were processed individually.  
 - The results will be saved in the `output_folder` as `Output.mat`, which will contain the following fields:
     - `NumUnits`: 1 x 1 int scalar of the number of units included in the analysis.
     - `NumSession`: 1 x 1 int scalar of the number of sessions included in the analysis.
