@@ -53,22 +53,22 @@ parfor k = 1:n_pairs
     idx_block_B = findNearestPoint(depth_bins, spikeInfo(idx_A).Location(2));
     
     if any(strcmpi(user_settings.clustering.features, 'Waveform'))
-        similarity_waveform(k) = waveformSimilarityMotionCorrected(waveforms_corrected([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:),...
+        similarity_waveform(k) = waveformSimilarity(waveforms_corrected([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:),...
             user_settings.waveformCorrection.n_nearest_channels);
-        similarity_raw_waveform(k) = waveformSimilarityMotionCorrected(waveforms([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:),...
+        similarity_raw_waveform(k) = waveformSimilarity(waveforms([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:),...
             user_settings.waveformCorrection.n_nearest_channels);
     end
     
     if any(strcmpi(user_settings.clustering.features, 'ISI'))
-        similarity_ISI(k) = ISI_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+        similarity_ISI(k) = computeSimilarity(ISI_features(idx_A, :), ISI_features(idx_B, :));
     end
 
     if any(strcmpi(user_settings.clustering.features, 'AutoCorr'))
-        similarity_AutoCorr(k) = autocorrelogramSimilarity(spikeInfo(idx_A), spikeInfo(idx_B));
+        similarity_AutoCorr(k) = computeSimilarity(AutoCorr_features(idx_A, :), AutoCorr_features(idx_B, :));
     end
 
     if any(strcmpi(user_settings.clustering.features, 'PETH'))
-        similarity_PETH(k) = PETH_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+        similarity_PETH(k) = computeSimilarity(PETH_features(idx_A, :), PETH_features(idx_B, :));
     end
     
     distance_this = spikeInfo(idx_B).Location - spikeInfo(idx_A).Location;

@@ -1,4 +1,56 @@
-% Estimating the motion of the electrode
+% Get all features
+if isfield(spikeInfo, 'ISI')
+    ISI_features = cat(1, spikeInfo.ISI);
+end
+
+if isfield(spikeInfo, 'AutoCorr')
+    AutoCorr_features = cat(1, spikeInfo.AutoCorr);
+end
+
+if isfield(spikeInfo, 'PETH')
+    PETH_features = cat(1, spikeInfo.PETH);
+end
+
+n_nearest_channels = user_settings.waveformCorrection.n_channels_precomputed;
+n_sample = size(spikeInfo(1).Waveform, 2);
+
+waveforms = zeros(length(spikeInfo), n_nearest_channels, n_sample);
+waveform_channels = zeros(length(spikeInfo), n_nearest_channels);
+
+channel_locations = [spikeInfo(1).Xcoords, spikeInfo(1).Ycoords];
+chanMap.xcoords = spikeInfo(1).Xcoords;
+chanMap.ycoords = spikeInfo(1).Ycoords;
+chanMap.kcoords = spikeInfo(1).Kcoords;
+chanMap.connected = ones(1, length(spikeInfo(1).Xcoords));
+
+% start parallel pool
+if isempty(gcp('nocreate'))
+    parpool();
+end
+progBar = ProgressBar(n_pairs, ...
+    'IsParallel', true, ...
+    'Title', 'Computing waveform features', ...
+    'UpdateRate', 1 ...
+    );
+progBar.setup([], [], []);
+
+parfor k = 1:length(spikeInfo)
+    location = spikeInfo(k).Location;
+    distance_to_location = sqrt(sum((channel_locations - location(1:2)).^2, 2));
+    [~, idx_sort] = sort(distance_to_location);
+    
+    idx_included = idx_sort(1:n_nearest_channels);
+    waveform_channels(k,:) = idx_included;
+
+    for j = 1:n_nearest_channels
+        waveforms(k,j,:) = spikeInfo(k).Waveform(idx_included(j),:);
+    end
+
+    updateParallel(1);
+end
+progBar.release();
+
+%% Estimating the motion of the electrode
 disp('---------------Motion Estimation---------------');
 max_distance = user_settings.motionEstimation.max_motion_distance;
 
@@ -42,21 +94,22 @@ parfor k = 1:n_pairs
     idx_B = idx_unit_pairs(k,2);
     
     if any(strcmpi(user_settings.motionEstimation.features, 'Waveform'))
-        similarity_waveform(k) = waveformSimilarity(spikeInfo(idx_A), spikeInfo(idx_B),...
-                user_settings.waveformCorrection.n_nearest_channels,...
-                user_settings.motionEstimation.interpolate_algorithm);
+        similarity_waveform(k) = waveformSimilarity(...
+            waveforms([idx_A,idx_B],:,:),...
+            waveform_channels([idx_A,idx_B],:),...
+            user_settings.waveformCorrection.n_nearest_channels);
     end
     
     if any(strcmpi(user_settings.motionEstimation.features, 'ISI'))
-        similarity_ISI(k) = ISI_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+        similarity_ISI(k) = computeSimilarity(ISI_features(idx_A, :), ISI_features(idx_B, :));
     end
     
     if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr'))
-        similarity_AutoCorr(k) = autocorrelogramSimilarity(spikeInfo(idx_A), spikeInfo(idx_B));
+        similarity_AutoCorr(k) = computeSimilarity(AutoCorr_features(idx_A, :), AutoCorr_features(idx_B, :));
     end
     
     if any(strcmpi(user_settings.motionEstimation.features, 'PETH'))
-        similarity_PETH(k) = PETH_Similarity(spikeInfo(idx_A), spikeInfo(idx_B));
+        similarity_PETH(k) = computeSimilarity(PETH_features(idx_A, :), PETH_features(idx_B, :));
     end
     
     updateParallel(1);
@@ -241,11 +294,18 @@ for k = 1:nblock
     options = optimset('MaxFunEvals', 1e8, 'MaxIter', 1e8, 'Display', 'none');
     p_boot = zeros(n_boot, n_session);
 
-    progBar = ProgressBar(...
-        n_boot, ...
-        'Title', 'Computing 95CI' ...
+    if isempty(gcp('nocreate'))
+        parpool();
+    end
+
+    progBar = ProgressBar(n_pairs, ...
+        'IsParallel', true, ...
+        'Title', 'Computing 95CI', ...
+        'UpdateRate', 1 ...
         );
-    for j = 1:n_boot
+    progBar.setup([], [], []);
+
+    parfor j = 1:n_boot
         idx_rand = randi(length(dx_block), 1, length(dx_block));
         dx_this = dx_block(idx_rand);
         idx_1_this = idx_1_block(idx_rand);
@@ -256,7 +316,7 @@ for k = 1:nblock
         p_this = fminunc(loss_fun, rand(1, n_session), options);
         p_boot(j,:) = p_this - mean(p_this);
     
-        progBar([], [], []);
+        updateParallel(1);
     end
     progBar.release();
 

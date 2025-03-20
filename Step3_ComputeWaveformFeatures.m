@@ -13,11 +13,18 @@ chanMap.ycoords = spikeInfo(1).Ycoords;
 chanMap.kcoords = spikeInfo(1).Kcoords;
 chanMap.connected = ones(1, length(spikeInfo(1).Xcoords));
 
-progBar = ProgressBar(...
-    length(spikeInfo), ...
-    'Title', 'Computing corrected waveforms' ...
+% start parallel pool
+if isempty(gcp('nocreate'))
+    parpool();
+end
+progBar = ProgressBar(n_pairs, ...
+    'IsParallel', true, ...
+    'Title', 'Computing waveform features', ...
+    'UpdateRate', 1 ...
     );
-for k = 1:length(spikeInfo)
+progBar.setup([], [], []);
+
+parfor k = 1:length(spikeInfo)
     % Do it with corrected waveforms
     location = spikeInfo(k).Location;
     idx_block = findNearestPoint(depth_bins, location(2));
@@ -40,7 +47,7 @@ for k = 1:length(spikeInfo)
             x, y, algorithm);
     end
 
-    progBar([], [], []);
+    updateParallel(1);
 end
 progBar.release();
 
