@@ -1,14 +1,26 @@
 % Get all features
-if isfield(spikeInfo, 'ISI')
+if isfield(spikeInfo, 'ISI') &&...
+        (any(strcmpi(user_settings.motionEstimation.features, 'ISI')) ||...
+        any(strcmpi(user_settings.clustering.features, 'ISI')))
     ISI_features = cat(1, spikeInfo.ISI);
+else
+    ISI_features = [];
 end
 
-if isfield(spikeInfo, 'AutoCorr')
+if isfield(spikeInfo, 'AutoCorr') &&...
+        (any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr')) ||...
+        any(strcmpi(user_settings.clustering.features, 'AutoCorr')))
     AutoCorr_features = cat(1, spikeInfo.AutoCorr);
+else
+    AutoCorr_features = [];
 end
 
-if isfield(spikeInfo, 'PETH')
+if isfield(spikeInfo, 'PETH') &&...
+        (any(strcmpi(user_settings.motionEstimation.features, 'PETH')) ||...
+        any(strcmpi(user_settings.clustering.features, 'PETH')))
     PETH_features = cat(1, spikeInfo.PETH);
+else
+    PETH_features = [];
 end
 
 n_nearest_channels = user_settings.waveformCorrection.n_channels_precomputed;
@@ -182,7 +194,7 @@ for iter = 1:user_settings.motionEstimation.n_iter
     idx_cluster_hdbscan(idx_cluster_hdbscan >= 0) = idx_cluster_hdbscan(idx_cluster_hdbscan >= 0)+1;
     
     n_cluster = max(idx_cluster_hdbscan);
-    hdbscan_matrix = zeros(size(similarity_matrix));
+    hdbscan_matrix = zeros(size(similarity_matrix), 'logical');
     for k = 1:n_cluster
         idx = find(idx_cluster_hdbscan == k);
         for j = 1:length(idx)
@@ -419,4 +431,4 @@ if user_settings.save_intermediate_results
 end
 
 % clear temp variables
-clear similarity similarity_all similarity_matrix similarity_waveform similarity_ISI similarity_AutoCorr similarity_PETH;
+clear similarity similarity_all similarity_matrix distance_matrix hdbscan_matrix similarity_waveform similarity_ISI similarity_AutoCorr similarity_PETH;

@@ -312,7 +312,6 @@ if user_settings.save_figures
 end
 %% save the final output
 % construct a similarity matrix for each feature
-DistanceMatrix = NaN(length(idx_cluster_hdbscan_curated));
 WaveformSimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
 RawWaveformSimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
 PETH_SimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
@@ -320,9 +319,6 @@ ISI_SimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
 AutoCorrSimilalrityMatrix = NaN(length(idx_cluster_hdbscan_curated));
 
 for k = 1:size(idx_unit_pairs, 1)
-    DistanceMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = distance(k);
-    DistanceMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = distance(k);
-
     WaveformSimilarityMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = similarity_waveform(k);
     WaveformSimilarityMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = similarity_waveform(k);
 
@@ -362,7 +358,6 @@ Output.Nblock = nblock;
 Output.RunTime = toc;
 
 % The features used / unused in Kilomatch that might be useful in manual curation
-Output.DistanceMatrix = DistanceMatrix;
 Output.WaveformSimilarityMatrix = WaveformSimilarityMatrix;
 Output.RawWaveformSimilarityMatrix = RawWaveformSimilarityMatrix;
 Output.ISI_SimilarityMatrix = ISI_SimilarityMatrix;

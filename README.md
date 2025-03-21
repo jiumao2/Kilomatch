@@ -64,7 +64,6 @@ pip install hdbscan
     - `GoodMatchesMatrix`: a n_unit x n_unit logical matrix of the good matches determined by `SimilarityThreshold`. `GoodMatchesMatrix(i,j) = 1` means unit `i` and `j` is a good match.
     - `SimilarityMatrix`: a n_unit x n_unit double matrix of the weighted sum of the similarity between each pair of units.
     
-    - `DistanceMatrix`: a n_unit x n_unit double matrix of the distance between each pair of units.
     - `WaveformSimilarityMatrix`: a n_unit x n_unit double matrix of the waveform similarity between each pair of units.
     - `RawWaveformSimilarityMatrix`: a n_unit x n_unit double matrix of the raw (uncorrected) waveform similarity between each pair of units.
     - `ISI_SimilarityMatrix`: a n_unit x n_unit double matrix of the ISI similarity between each pair of units.

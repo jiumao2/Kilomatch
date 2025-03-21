@@ -26,7 +26,6 @@ similarity_raw_waveform = zeros(n_pairs, 1);
 similarity_ISI = zeros(n_pairs, 1);
 similarity_AutoCorr = zeros(n_pairs, 1);
 similarity_PETH = zeros(n_pairs, 1);
-distance = zeros(n_pairs, 1);
 
 % compute similarity
 % start parallel pool
@@ -45,12 +44,6 @@ progBar.setup([], [], []);
 parfor k = 1:n_pairs
     idx_A = idx_unit_pairs(k,1);
     idx_B = idx_unit_pairs(k,2);
-
-    session_A = session_pairs(k,1);
-    session_B = session_pairs(k,2);
-
-    idx_block_A = findNearestPoint(depth_bins, spikeInfo(idx_B).Location(2));
-    idx_block_B = findNearestPoint(depth_bins, spikeInfo(idx_A).Location(2));
     
     if any(strcmpi(user_settings.clustering.features, 'Waveform'))
         similarity_waveform(k) = waveformSimilarity(waveforms_corrected([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:),...
@@ -71,10 +64,6 @@ parfor k = 1:n_pairs
         similarity_PETH(k) = computeSimilarity(PETH_features(idx_A, :), PETH_features(idx_B, :));
     end
     
-    distance_this = spikeInfo(idx_B).Location - spikeInfo(idx_A).Location;
-    distance_this(2) = distance_this(2) - (positions(idx_block_B, session_B) - positions(idx_block_A, session_A));
-    distance(k) = sqrt(sum(distance_this.^2));
-    
     updateParallel(1);
 end
 progBar.release();
@@ -85,7 +74,7 @@ toc;
 if user_settings.save_intermediate_results
     save(fullfile(user_settings.output_folder, 'AllSimilarity.mat'),...
         'similarity_waveform', 'similarity_raw_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH',...
-        'distance', 'idx_unit_pairs', 'session_pairs', '-nocompression');
+        'idx_unit_pairs', 'session_pairs', '-nocompression');
 end
 
 %%
