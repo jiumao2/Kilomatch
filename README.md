@@ -73,6 +73,8 @@ pip install hdbscan
     - `Motion`: a 1 x n_session double array of the positions of the electrode in each session.
     - `Nblock`: a 1 x 1 int scalar of the number of blocks used in the motion correction.
 
+    - `RunTime`: a 1 x 1 double of the total run time of the analysis in seconds.
+
 ## Notes
 
 - The project is still under development and fundamental changes may occur.
