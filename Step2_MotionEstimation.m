@@ -23,17 +23,13 @@ else
     PETH_features = [];
 end
 
+% Get waveform features
 n_nearest_channels = user_settings.waveformCorrection.n_channels_precomputed;
 n_sample = size(spikeInfo(1).Waveform, 2);
 
 waveforms = zeros(length(spikeInfo), n_nearest_channels, n_sample);
 waveform_channels = zeros(length(spikeInfo), n_nearest_channels);
-
 channel_locations = [spikeInfo(1).Xcoords, spikeInfo(1).Ycoords];
-chanMap.xcoords = spikeInfo(1).Xcoords;
-chanMap.ycoords = spikeInfo(1).Ycoords;
-chanMap.kcoords = spikeInfo(1).Kcoords;
-chanMap.connected = ones(1, length(spikeInfo(1).Xcoords));
 
 % start parallel pool
 if isempty(gcp('nocreate'))
@@ -160,12 +156,14 @@ for k = 1:size(idx_unit_pairs, 1)
     similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
 end
 similarity_matrix(eye(size(similarity_matrix)) == 1) = 5;
-%
+
+% iterative clustering
 for iter = 1:user_settings.motionEstimation.n_iter
     fprintf('Iteration %d starts!\n', iter);
 
     % HDBSCAN
     distance_matrix = 1./(1 + tanh(similarity_matrix));
+    distance_matrix(eye(size(distance_matrix)) == 1) = 0;
     
     HDBSCAB_settings.min_samples = 1; % The number of samples in a neighborhood for a point to be considered as a core point.
     % This includes the point itself. When None, defaults to min_cluster_size.
@@ -185,6 +183,7 @@ for iter = 1:user_settings.motionEstimation.n_iter
 
     writeNPY(distance_matrix, fullfile(user_settings.output_folder, 'DistanceMatrix.npy'));
     
+    % run HDBSCAN with Python
     system([fullfile(user_settings.path_to_python), ' ',...
         fullfile(path_kilomatch, 'Functions/main_hdbscan.py'), ' ',...
         fullfile(user_settings.output_folder, 'HDBSCAN_settings.json')]);
@@ -235,6 +234,7 @@ similarity = sum(similarity_all.*weights, 2);
 idx_good = find(similarity' > similarity_thres & is_matched == 1);
 n_pairs_included = length(idx_good);
 
+% plot the final similarity score distribution
 fig = EasyPlot.figure();
 ax_similarity = EasyPlot.axes(fig,...
     'Width', 3,...
@@ -264,7 +264,7 @@ session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_
 
 % get all the good pairs and their distance
 depth = zeros(1, length(idx_good));
-dx = zeros(1, length(idx_good));
+dy = zeros(1, length(idx_good));
 idx_1 = zeros(1, length(idx_good));
 idx_2 = zeros(1, length(idx_good));
 for k = 1:length(idx_good)
@@ -274,7 +274,7 @@ for k = 1:length(idx_good)
 
     idx_1(k) = session_pairs(idx_good(k),1);
     idx_2(k) = session_pairs(idx_good(k),2);
-    dx(k) = spikeInfo(unit2).Location(2) - spikeInfo(unit1).Location(2);
+    dy(k) = spikeInfo(unit2).Location(2) - spikeInfo(unit1).Location(2);
     depth(k) = d_this;
 end
 
@@ -287,7 +287,7 @@ n_boot = 100;
 positions = NaN(nblock, n_session);
 positions_ci95 = zeros(2, nblock, n_session);
 for k = 1:nblock
-    dx_block = dx(idx_block == k);
+    dy_block = dy(idx_block == k);
     idx_1_block = idx_1(idx_block == k);
     idx_2_block = idx_2(idx_block == k);
 
@@ -297,7 +297,7 @@ for k = 1:nblock
     end
 
     options = optimset('MaxFunEvals', 1e8, 'MaxIter', 1e8);
-    loss_fun = @(x) sum((dx_block - (x(idx_2_block) - x(idx_1_block))).^2, 'all');
+    loss_fun = @(y) sum((dy_block - (y(idx_2_block) - y(idx_1_block))).^2, 'all');
 
     p = fminunc(loss_fun, rand(1, n_session), options);
     p = p - mean(p);
@@ -318,12 +318,12 @@ for k = 1:nblock
     progBar.setup([], [], []);
 
     parfor j = 1:n_boot
-        idx_rand = randi(length(dx_block), 1, length(dx_block));
-        dx_this = dx_block(idx_rand);
+        idx_rand = randi(length(dy_block), 1, length(dy_block));
+        dy_this = dy_block(idx_rand);
         idx_1_this = idx_1_block(idx_rand);
         idx_2_this = idx_2_block(idx_rand);
     
-        loss_fun = @(x) sum((dx_this - (x(idx_2_this) - x(idx_1_this))).^2, 'all');
+        loss_fun = @(y) sum((dy_this - (y(idx_2_this) - y(idx_1_this))).^2, 'all');
     
         p_this = fminunc(loss_fun, rand(1, n_session), options);
         p_boot(j,:) = p_this - mean(p_this);
@@ -344,7 +344,6 @@ end
 fprintf('%d / %d blocks are available!\n', sum(~isnan(positions(:,1))), nblock);
 
 % interpolate the motion with nearest value if some blocks are not sampled
-p_all_old = positions;
 for k = 1:nblock
     if all(isnan(positions(k,:)))
         distance = abs(depth_bins-depth_bins(k));
@@ -371,9 +370,9 @@ end
 
 % Plot the drift
 % compute the residues
-dx_left = dx;
+dy_left = dy;
 for k = 1:nblock
-    dx_left(idx_block==k) = dx(idx_block==k) - (positions(k, idx_2(idx_block==k)) - positions(k, idx_1(idx_block==k)));
+    dy_left(idx_block==k) = dy(idx_block==k) - (positions(k, idx_2(idx_block==k)) - positions(k, idx_1(idx_block==k)));
 end
 
 fig = EasyPlot.figure();
@@ -407,18 +406,18 @@ if nblock > 1
     for k = 1:nblock
         EasyPlot.plotShaded(ax_distance,...
             [depth_edges(k), depth_edges(k+1)],...
-            [min(dx), max(dx); min(dx), max(dx)]', 'shadedColor', colors_block(k,:));
+            [min(dy), max(dy); min(dy), max(dy)]', 'shadedColor', colors_block(k,:));
     end
 end
 
-plot(ax_distance, depth, dx, '.', 'Color', colors(1,:));
-plot(ax_distance, depth, dx_left, '.', 'Color', colors(2,:));
+plot(ax_distance, depth, dy, '.', 'Color', colors(1,:));
+plot(ax_distance, depth, dy_left, '.', 'Color', colors(2,:));
 
 xlabel(ax_distance, 'Depth (um)');
 ylabel(ax_distance, 'Residues (um)');
 
 xlim(ax_distance, [depth_edges(1), depth_edges(end)]);
-ylim(ax_distance, [min(dx), max(dx)]);
+ylim(ax_distance, [min(dy), max(dy)]);
 
 EasyPlot.cropFigure(fig);
 if user_settings.save_figures

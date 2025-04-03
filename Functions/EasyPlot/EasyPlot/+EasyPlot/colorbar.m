@@ -1,16 +1,41 @@
 function handle = colorbar(axes, varargin)
     % keep the position of the axes unchanged
+    location = 'eastoutside';
+    if nargin>1
+        for k = 1:2:size(varargin,2)
+            if strcmpi(varargin{k}, 'location')
+                location = varargin{k+1};
+            end
+        end
+    end
+
+
     position_raw = axes.Position;
 
     handle = colorbar(axes,...
         'Units', EasyPlot.DefaultValue.Units,...
         'FontName',EasyPlot.DefaultValue.FontName,...
-        'FontSize',EasyPlot.DefaultValue.FontSize);
-
+        'FontSize',EasyPlot.DefaultValue.FontSize,...
+        'Location', location);
+    
+    drawnow;
+    position_new = axes.Position;
     position_raw_colorbar = handle.Position;
+    
     handle.Location = 'Manual';
-    handle.Position(1) = position_raw_colorbar(1)+position_raw(3)-axes.Position(3);
-    handle.Position(2) = position_raw_colorbar(2)+position_raw(4)-axes.Position(4);
+
+    if contains(location, 'east')
+        handle.Position(1) = position_raw_colorbar(1)+position_raw(3)-position_new(3);
+    elseif contains(location, 'west')
+        handle.Position(1) = position_raw_colorbar(1)-(position_raw(3)-position_new(3));
+    end
+    
+    if contains(location, 'north')
+        handle.Position(2) = position_raw_colorbar(2)+position_raw(4)-position_new(4);
+    elseif contains(location, 'south')
+        handle.Position(2) = position_raw_colorbar(2)-(position_raw(4)-position_new(4));
+    end
+
     handle.Position(3:4) = position_raw_colorbar(3:4);
     axes.Position = position_raw;
 
@@ -64,6 +89,8 @@ function handle = colorbar(axes, varargin)
                     labels_out = labels;
                 end
                 EasyPlot.set(handle, 'TickLabels', labels_out);
+            elseif strcmpi(varargin{k}, 'location')
+
             else
                 EasyPlot.set(handle,varargin{k},varargin{k+1});
             end

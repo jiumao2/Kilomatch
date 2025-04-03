@@ -48,6 +48,7 @@ for iter = 1:user_settings.clustering.n_iter
     
     writeNPY(distance_matrix, fullfile(user_settings.output_folder, 'DistanceMatrix.npy'));
     
+    % run HDBSCAN with Python
     system([fullfile(user_settings.path_to_python), ' ',...
         fullfile(path_kilomatch, 'Functions/main_hdbscan.py'), ' ',...
         fullfile(user_settings.output_folder, 'HDBSCAN_settings.json')]);

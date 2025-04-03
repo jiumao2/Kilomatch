@@ -19,14 +19,6 @@ if n_session ~= length(unique([spikeInfo.SessionIndex]))
     error('SessionIndex should start from 1 and be coninuous without any gaps!');
 end
 
-% check PETH
-if ~isfield(spikeInfo(1), 'PETH')
-    disp('PETH not found in SpikeInfo! Filled with zeros instead!');
-    for k = 1:length(spikeInfo)
-        spikeInfo(k).PETH = zeros(1, 5);
-    end
-end
-
 %% preprocessing data
 chanMap.xcoords = spikeInfo(1).Xcoords;
 chanMap.ycoords = spikeInfo(1).Ycoords;

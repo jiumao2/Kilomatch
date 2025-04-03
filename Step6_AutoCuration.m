@@ -28,7 +28,8 @@ if user_settings.autoCuration.auto_split
     n_cluster = n_cluster_new;
 end
 
-% remove bad units in the cluster if any similarity < reject_thres
+% remove bad units in the cluster if two or more units are originated from the same sessions 
+% or any similarity < reject_thres
 for k = 1:n_cluster
     units = find(idx_cluster_hdbscan == k);
     sessions_this = sessions(units);
@@ -93,7 +94,7 @@ end
 hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
 
 [num_same, num_before, num_after] = graphEditNumber(hdbscan_matrix_raw, hdbscan_matrix);
-assert(num_same == num_after)
+assert(num_same == num_after);
 
 fprintf('%d deleting steps are done!\n', num_before-num_after);
 fprintf('%d clusters and %d pairs after removing bad units!\n',...

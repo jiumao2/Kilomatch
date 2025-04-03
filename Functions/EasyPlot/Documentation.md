@@ -20,6 +20,7 @@
     - [plotShaded](#plotshaded)
     - [boundedLine](#boundedline)
     - [violinplot](#violinplot)
+    - [venn](#venn)
   - [Colormaps](#colormaps)
   - [Default settings](#default-settings)
   - [Export](#export)
@@ -293,6 +294,21 @@ EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, 'violinplot');
 ```
 ![](./doc/violinplot.png)
+
+#### venn
+> Darik (2025). venn (https://www.mathworks.com/matlabcentral/fileexchange/22282-venn), MATLAB Central File Exchange.  
+- Create a Venn diagram.
+```matlab
+fig = EasyPlot.figure();
+ax = EasyPlot.axes(fig, 'Width', 3, 'Height', 3, 'XAxisVisible', 'off', 'YAxisVisible', 'off');
+axis(ax, 'equal');
+
+EasyPlot.venn(ax, [10, 15], 5);
+
+EasyPlot.cropFigure(fig);
+EasyPlot.exportFigure(fig, 'venn');
+```  
+![](./doc/venn.png){width=50%, height=50%}  
 
 ### Colormaps
 - EasyPlot adapts the colormaps from Matplotlib 3.0.  

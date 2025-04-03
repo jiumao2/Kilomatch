@@ -52,7 +52,7 @@ function handle_all = scalebar(ax, type, varargin)
 %     lineWidth: the lineWidth of the scalebar (default, 2)
 % 
 %     fontWeight: the fontWeight of the text
-%             'bold' (default) | 'normal'
+%             'bold' | 'normal' (default)
 % 
 %     fontSize: the fontSize of the text (default, 8)
 % 
@@ -68,7 +68,7 @@ function handle_all = scalebar(ax, type, varargin)
 
 color = 'k';
 lineWidth = 2;
-fontWeight = 'bold';
+fontWeight = 'normal';
 fontSize = EasyPlot.DefaultValue.FontSize;
 fontName = EasyPlot.DefaultValue.FontName;
 xBarLabel = '';
