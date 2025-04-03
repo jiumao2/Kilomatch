@@ -1,22 +1,24 @@
-% set the path to Kilomatch and settings
-path_kilomatch = '.\Kilomatch';
-path_settings = '.\settings.json';
+% Set the path to Kilomatch and settings
+path_kilomatch = '.\Kilomatch'; % The path where Kilomatch is installed
+path_settings = '.\settings.json'; % Please make sure the settings are correct
 
 addpath(path_kilomatch);
 addpath(genpath(fullfile(path_kilomatch, 'Functions')));
 
-user_settings = jsonc.jsoncDecode(fileread(path_settings));
+user_settings = jsonc.jsoncDecode(fileread(path_settings)); % Read the settings
 tic;
 
-%% Kilomatch
+%% Run Kilomatch
 Step1_Preprocess;
 
 output_folder = user_settings.output_folder;
 path_to_data = user_settings.path_to_data;
 
+% Read the shank ID of each unit
 shanks_data = arrayfun(@(x)x.Kcoords(x.Channel), spikeInfo);
 shankIDs = unique(spikeInfo(1).Kcoords);
 
+% Run Kilomatch in each shank individually
 for i_shank = 1:length(shankIDs)
     % Reload the data and only consider the current shank
     load(fullfile(output_folder, 'spikeInfo.mat'));
@@ -32,6 +34,7 @@ for i_shank = 1:length(shankIDs)
         mkdir(fullfile(user_settings.output_folder, 'Figures'));
     end
 
+    % Run the remaining processes
     Step2_MotionEstimation;
     Step3_ComputeWaveformFeatures;
     Step4_ComputeAllSimilarity;
@@ -125,6 +128,7 @@ end
 
 Output.NumClusters = n_cluster;
 
+% Save the combined output
 fprintf('Saving Output to %s ...\n', fullfile(output_folder, 'Output.mat'));
 save(fullfile(output_folder, 'Output.mat'), 'Output', '-nocompression');
 save(fullfile(output_folder, 'Waveforms.mat'), 'waveform_channels', 'waveforms', 'waveforms_corrected', '-nocompression');
