@@ -62,7 +62,7 @@ if strcmpi(algorithm, 'Transformation')
 end
 
 if strcmpi(algorithm, 'Krig')
-    n_channels = 32;
+    n_channels = 36;
     distance_to_location = sum((channel_locations - [x,y]).^2, 2);
     
     [~, idx_sorted] = sort(distance_to_location, 'ascend');
