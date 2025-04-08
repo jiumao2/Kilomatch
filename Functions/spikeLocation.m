@@ -6,6 +6,8 @@ function [x, y, z, ptt] = spikeLocation(waveforms_mean, chanMap, n_nearest_chann
 %
 % monopolar_triangulation: refer to Boussard, Julien, Erdem Varol, Hyun Dong Lee, Nishchal Dethe, and Liam Paninski. “Three-Dimensional Spike Localization and Improved Motion Correction for Neuropixels Recordings.” In Advances in Neural Information Processing Systems, 34:22095–105. Curran Associates, Inc., 2021. https://proceedings.neurips.cc/paper/2021/hash/b950ea26ca12daae142bd74dba4427c8-Abstract.html.
 % > https://spikeinterface.readthedocs.io/en/stable/modules/postprocessing.html#spike-locations
+% > https://github.com/SpikeInterface/spikeinterface/blob/main/src/spikeinterface/postprocessing/localization_tools.py#L334
+%
 
 if nargin < 3
     n_nearest_channels = 20;
@@ -60,8 +62,8 @@ end
 
 % nonlinear least-square fitting
 fun = @(x, loc_this) x(4)./sqrt((loc_this(:,1)-x(1)).^2 + (loc_this(:,2)-x(2)).^2 + x(3).^2);
-x_bound_lower = [loc_center_to_mass(1)-1000, loc_center_to_mass(2)-1000, 0, 0];
-x_bound_upper = [loc_center_to_mass(1)+1000, loc_center_to_mass(2)+1000, 1000*10, 1000*ptt_max];
+x_bound_lower = [loc_center_to_mass(1)-100, loc_center_to_mass(2)-100, 0, 0];
+x_bound_upper = [loc_center_to_mass(1)+100, loc_center_to_mass(2)+100, 100*10, 1000*ptt_max];
 x0 = [loc_center_to_mass, 1, ptt_max];
 
 % disp('Calculating the location...');
