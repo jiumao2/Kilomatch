@@ -312,30 +312,6 @@ if user_settings.save_figures
     EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/CuratedResult'));
 end
 %% save the final output
-% construct a similarity matrix for each feature
-WaveformSimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
-RawWaveformSimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
-PETH_SimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
-ISI_SimilarityMatrix = NaN(length(idx_cluster_hdbscan_curated));
-AutoCorrSimilalrityMatrix = NaN(length(idx_cluster_hdbscan_curated));
-
-for k = 1:size(idx_unit_pairs, 1)
-    WaveformSimilarityMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = similarity_waveform(k);
-    WaveformSimilarityMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = similarity_waveform(k);
-
-    RawWaveformSimilarityMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = similarity_raw_waveform(k);
-    RawWaveformSimilarityMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = similarity_raw_waveform(k);
-
-    PETH_SimilarityMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = similarity_PETH(k);
-    PETH_SimilarityMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = similarity_PETH(k);
-
-    ISI_SimilarityMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = similarity_ISI(k);
-    ISI_SimilarityMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = similarity_ISI(k);
-
-    AutoCorrSimilalrityMatrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = similarity_AutoCorr(k);
-    AutoCorrSimilalrityMatrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = similarity_AutoCorr(k);
-end
-
 Output = struct();
 Output.NumClusters = max(idx_cluster_hdbscan_curated);
 Output.NumUnits = length(idx_cluster_hdbscan_curated);
@@ -357,13 +333,6 @@ Output.Sessions = sessions;
 Output.Motion = positions;
 Output.Nblock = nblock;
 Output.RunTime = toc;
-
-% The features used / unused in Kilomatch that might be useful in manual curation
-Output.WaveformSimilarityMatrix = WaveformSimilarityMatrix;
-Output.RawWaveformSimilarityMatrix = RawWaveformSimilarityMatrix;
-Output.ISI_SimilarityMatrix = ISI_SimilarityMatrix;
-Output.AutoCorrSimilalrityMatrix = AutoCorrSimilalrityMatrix;
-Output.PETH_SimilarityMatrix = PETH_SimilarityMatrix;
 
 save(fullfile(user_settings.output_folder, 'Output.mat'), 'Output', '-nocompression');
 fprintf('Kilomatch done! Output is saved to %s!\n', fullfile(user_settings.output_folder, 'Output.mat'));
