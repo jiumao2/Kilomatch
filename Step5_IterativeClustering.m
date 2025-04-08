@@ -5,6 +5,7 @@ n_session = max(sessions);
 
 names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};
 similarity_all = [similarity_waveform, similarity_ISI, similarity_AutoCorr, similarity_PETH];
+n_pairs = size(similarity_all, 1);
 
 similarity_names = user_settings.clustering.features';
 idx_names = zeros(1, length(similarity_names));
@@ -12,16 +13,10 @@ for k = 1:length(similarity_names)
     idx_names(k) = find(strcmpi(names_all, similarity_names{k}));
 end
 similarity_all = similarity_all(:, idx_names);
+similarity_matrix_all = similarity_matrix_all(:,:,idx_names);
 
 weights = ones(1, length(similarity_names))./length(similarity_names);
-mean_similarity = sum(similarity_all.*weights, 2);
-
-similarity_matrix = zeros(n_unit);
-for k = 1:size(idx_unit_pairs, 1)
-    similarity_matrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = mean_similarity(k);
-    similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
-end
-similarity_matrix(eye(size(similarity_matrix)) == 1) = 5;
+similarity_matrix = squeeze(mean(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
 
 for iter = 1:user_settings.clustering.n_iter
     fprintf('Iteration %d starts!\n', iter);
@@ -70,7 +65,7 @@ for iter = 1:user_settings.clustering.n_iter
     end
     
     hdbscan_matrix(eye(n_unit) == 1) = 1;
-    is_matched = arrayfun(@(x)hdbscan_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:length(mean_similarity));
+    is_matched = arrayfun(@(x)hdbscan_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs);
 
     if iter ~= user_settings.clustering.n_iter
         % LDA and update weights
@@ -82,13 +77,7 @@ for iter = 1:user_settings.clustering.n_iter
         disp(weights);
         
         % update the similarity matrix
-        mean_similarity = sum(similarity_all.*weights, 2);
-        similarity_matrix = zeros(n_unit);
-        for k = 1:size(idx_unit_pairs, 1)
-            similarity_matrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = mean_similarity(k);
-            similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
-        end
-        similarity_matrix(eye(size(similarity_matrix)) == 1) = 5;
+        similarity_matrix = squeeze(mean(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
     end
 end
 
@@ -124,9 +113,8 @@ ax = EasyPlot.axes(fig,...
     'MarginBottom', 1,...
     'MarginLeft', 1);
 
-sim_this = sum(similarity_all.*weights, 2);
-histogram(ax, sim_this(is_matched==0), 'Normalization', 'probability', 'BinWidth', 0.05, 'FaceColor', 'k');
-histogram(ax, sim_this(is_matched==1), 'Normalization', 'probability', 'BinWidth', 0.05, 'FaceColor', 'b');
+histogram(ax, similarity(is_matched==0), 'Normalization', 'probability', 'BinWidth', 0.05, 'FaceColor', 'k');
+histogram(ax, similarity(is_matched==1), 'Normalization', 'probability', 'BinWidth', 0.05, 'FaceColor', 'b');
 xline(ax, thres, 'k:', 'LineWidth', 2);
 xlabel(ax, 'Similarity');
 ylabel(ax, 'Probability');

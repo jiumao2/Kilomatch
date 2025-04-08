@@ -23,44 +23,10 @@ else
     PETH_features = [];
 end
 
-% Get waveform features
-n_nearest_channels = user_settings.waveformCorrection.n_channels_precomputed;
-n_sample = size(spikeInfo(1).Waveform, 2);
-
-waveforms = zeros(length(spikeInfo), n_nearest_channels, n_sample);
-waveform_channels = zeros(length(spikeInfo), n_nearest_channels);
-channel_locations = [spikeInfo(1).Xcoords, spikeInfo(1).Ycoords];
-
-% start parallel pool
-if isempty(gcp('nocreate'))
-    parpool();
-end
-progBar = ProgressBar(length(spikeInfo), ...
-    'IsParallel', true, ...
-    'Title', 'Computing waveform features', ...
-    'UpdateRate', 1 ...
-    );
-progBar.setup([], [], []);
-
-parfor k = 1:length(spikeInfo)
-    location = spikeInfo(k).Location;
-    distance_to_location = sqrt(sum((channel_locations - location(1:2)).^2, 2));
-    [~, idx_sort] = sort(distance_to_location);
-    
-    idx_included = idx_sort(1:n_nearest_channels);
-    waveform_channels(k,:) = idx_included;
-
-    for j = 1:n_nearest_channels
-        waveforms(k,j,:) = spikeInfo(k).Waveform(idx_included(j),:);
-    end
-
-    updateParallel(1);
-end
-progBar.release();
-
 %% Estimating the motion of the electrode
 disp('---------------Motion Estimation---------------');
-max_distance = user_settings.motionEstimation.max_motion_distance;
+max_distance = user_settings.motionEstimation.max_distance;
+n_nearest_channels = user_settings.waveformCorrection.n_nearest_channels;
 
 unit_locations = zeros(1, length(spikeInfo));
 for k = 1:length(unit_locations)
@@ -68,61 +34,105 @@ for k = 1:length(unit_locations)
 end
 
 y_distance_matrix = abs(unit_locations - unit_locations');
-
-idx_col = floor((0:numel(y_distance_matrix)-1) ./ size(y_distance_matrix, 1))' + 1;
-idx_row = mod((0:numel(y_distance_matrix)-1), size(y_distance_matrix, 1))' + 1;
-idx_good = find(y_distance_matrix(:) <= max_distance & idx_col > idx_row);
-idx_unit_pairs = [idx_row(idx_good), idx_col(idx_good)];
+[idx_row, idx_col] = ind2sub(size(y_distance_matrix), 1:numel(y_distance_matrix));
+idx_good = find(y_distance_matrix(:) <= max_distance & idx_col' > idx_row');
+idx_unit_pairs = [idx_row(idx_good); idx_col(idx_good)]';
 
 n_pairs = size(idx_unit_pairs, 1);
 
-% clear temp variables to save memory
-clear unit_locations y_distance_matrix idx_row idx_col idx_good;
+% compute waveform similarity
+channel_locations = [spikeInfo(1).Xcoords, spikeInfo(1).Ycoords];
+idx_nearest = knnsearch(channel_locations, channel_locations, 'K', n_nearest_channels);
+idx_nearest_sorted = sort(idx_nearest, 2);
 
-%% compute similarity
-similarity_waveform = zeros(n_pairs, 1);
-similarity_ISI = zeros(n_pairs, 1);
-similarity_AutoCorr = zeros(n_pairs, 1);
-similarity_PETH = zeros(n_pairs, 1);
+[idx_nearest_unique, ~, idx_groups] = unique(idx_nearest_sorted, 'rows');
 
-% start parallel pool
-if isempty(gcp('nocreate'))
-    parpool();
+waveform_all = zeros(length(spikeInfo), size(spikeInfo(1).Waveform, 1), size(spikeInfo(1).Waveform, 2));
+waveform_similarity_matrix = zeros(length(spikeInfo));
+for k = 1:length(spikeInfo)
+    waveform_all(k,:,:) = spikeInfo(k).Waveform;
 end
-disp('Start computing similarity!');
-progBar = ProgressBar(n_pairs, ...
-    'IsParallel', true, ...
-    'Title', 'Computing Similarity', ...
-    'UpdateRate', 1 ...
-    );
-progBar.setup([], [], []);
 
-parfor k = 1:n_pairs
-    idx_A = idx_unit_pairs(k,1);
-    idx_B = idx_unit_pairs(k,2);
-    
-    if any(strcmpi(user_settings.motionEstimation.features, 'Waveform'))
-        similarity_waveform(k) = waveformSimilarity(...
-            waveforms([idx_A,idx_B],:,:),...
-            waveform_channels([idx_A,idx_B],:),...
-            user_settings.waveformCorrection.n_nearest_channels);
+ptt = max(waveforms_corrected,[],3) - min(waveforms_corrected,[],3);
+[~, ch] = max(ptt, [], 2);
+
+progBar = ProgressBar(size(idx_nearest_unique, 1), ...
+    'Title', 'Computing waveform features',...
+    'UpdateRate', 1);
+
+for k = 1:size(idx_nearest_unique, 1)
+    idx_included = find(idx_groups == k);
+    idx_units = find(arrayfun(@(x)any(idx_included==x), ch));
+
+    if isempty(idx_units)
+        progBar([], [], []);
+        continue
     end
+
+    waveform_this = reshape(waveform_all(:, idx_nearest_unique(k,:), :),...
+        length(spikeInfo), []);
+
+    temp = corrcoef(waveform_this');
+    temp(isnan(temp)) = 0;
+    temp = atanh(temp);
     
-    if any(strcmpi(user_settings.motionEstimation.features, 'ISI'))
-        similarity_ISI(k) = computeSimilarity(ISI_features(idx_A, :), ISI_features(idx_B, :));
-    end
-    
-    if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr'))
-        similarity_AutoCorr(k) = computeSimilarity(AutoCorr_features(idx_A, :), AutoCorr_features(idx_B, :));
-    end
-    
-    if any(strcmpi(user_settings.motionEstimation.features, 'PETH'))
-        similarity_PETH(k) = computeSimilarity(PETH_features(idx_A, :), PETH_features(idx_B, :));
-    end
-    
-    updateParallel(1);
+    waveform_similarity_matrix(idx_units,:) = temp(idx_units,:);
+
+    progBar([], [], []);
 end
 progBar.release();
+
+waveform_similarity_matrix = max(...
+    cat(3, waveform_similarity_matrix, waveform_similarity_matrix'),...
+    [], 3);
+
+%% compute similarity
+n_unit = length(spikeInfo);
+
+similarity_waveform = arrayfun(...
+        @(x)waveform_similarity_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs)';
+
+similarity_ISI = zeros(n_pairs, 1);
+ISI_similarity_matrix = zeros(n_unit);
+if any(strcmpi(user_settings.motionEstimation.features, 'ISI'))
+    ISI_similarity_matrix = corrcoef(ISI_features');
+    ISI_similarity_matrix(isnan(ISI_similarity_matrix)) = 0;
+    ISI_similarity_matrix = atanh(ISI_similarity_matrix);
+
+    similarity_ISI = arrayfun(...
+        @(x)ISI_similarity_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs)';
+end
+
+similarity_AutoCorr = zeros(n_pairs, 1);
+AutoCorr_similarity_matrix = zeros(n_unit);
+if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr'))
+    AutoCorr_similarity_matrix = corrcoef(AutoCorr_features');
+    AutoCorr_similarity_matrix(isnan(AutoCorr_similarity_matrix)) = 0;
+    AutoCorr_similarity_matrix = atanh(AutoCorr_similarity_matrix);
+
+    similarity_AutoCorr = arrayfun(...
+        @(x)AutoCorr_similarity_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs)';
+end
+
+similarity_PETH = zeros(n_pairs, 1);
+PETH_similarity_matrix = zeros(n_unit);
+if any(strcmpi(user_settings.motionEstimation.features, 'PETH'))
+    PETH_similarity_matrix = corrcoef(PETH_features');
+    PETH_similarity_matrix(isnan(PETH_similarity_matrix)) = 0;
+    PETH_similarity_matrix = atanh(PETH_similarity_matrix);
+
+    similarity_PETH = arrayfun(...
+        @(x)PETH_similarity_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs)';
+end
+
+names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};
+similarity_all = [similarity_waveform, similarity_ISI, similarity_AutoCorr, similarity_PETH];
+
+similarity_matrix_all = cat(3,...
+    waveform_similarity_matrix,...
+    ISI_similarity_matrix,...
+    AutoCorr_similarity_matrix,...
+    PETH_similarity_matrix);
 
 fprintf('Computing similarity done! Saved to %s ...\n', fullfile(user_settings.output_folder, 'SimilarityForCorretion.mat'));
 toc;
@@ -133,12 +143,16 @@ if user_settings.save_intermediate_results
         'similarity_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH', 'idx_unit_pairs', '-nocompression');
 end
 
+% clear temp variables to save memory
+clear temp ...
+    similarity_waveform similarity_ISI similarity_AutoCorr similarity_PETH ...
+    waveform_similarity_matrix ISI_similarity_matrix AutoCorr_similarity_matrix PETH_similarity_matrix...
+    waveform_all unit_locations y_distance_matrix idx_row idx_col idx_good;
+
 %% Pre-clustering
 n_unit = length(spikeInfo);
 sessions = [spikeInfo.SessionIndex];
 n_session = max(sessions);
-names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};
-similarity_all = [similarity_waveform, similarity_ISI, similarity_AutoCorr, similarity_PETH];
 
 similarity_names = user_settings.motionEstimation.features';
 idx_names = zeros(1, length(similarity_names));
@@ -146,16 +160,10 @@ for k = 1:length(similarity_names)
     idx_names(k) = find(strcmpi(names_all, similarity_names{k}));
 end
 similarity_all = similarity_all(:, idx_names);
+similarity_matrix_all = similarity_matrix_all(:,:,idx_names);
 
 weights = ones(1, length(similarity_names))./length(similarity_names);
-mean_similarity = sum(similarity_all.*weights, 2);
-
-similarity_matrix = zeros(n_unit);
-for k = 1:size(idx_unit_pairs, 1)
-    similarity_matrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = mean_similarity(k);
-    similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
-end
-similarity_matrix(eye(size(similarity_matrix)) == 1) = 5;
+similarity_matrix = squeeze(mean(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
 
 % iterative clustering
 for iter = 1:user_settings.motionEstimation.n_iter
@@ -205,7 +213,7 @@ for iter = 1:user_settings.motionEstimation.n_iter
     end
     
     hdbscan_matrix(eye(n_unit) == 1) = 1;
-    is_matched = arrayfun(@(x)hdbscan_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:length(mean_similarity));
+    is_matched = arrayfun(@(x)hdbscan_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs);
 
     if iter ~= user_settings.motionEstimation.n_iter        
         % LDA and update weights
@@ -217,13 +225,7 @@ for iter = 1:user_settings.motionEstimation.n_iter
         disp(weights);
         
         % update the similarity matrix
-        mean_similarity = sum(similarity_all.*weights, 2);
-        similarity_matrix = zeros(n_unit);
-        for k = 1:size(idx_unit_pairs, 1)
-            similarity_matrix(idx_unit_pairs(k,1), idx_unit_pairs(k,2)) = mean_similarity(k);
-            similarity_matrix(idx_unit_pairs(k,2), idx_unit_pairs(k,1)) = mean_similarity(k);
-        end
-        similarity_matrix(eye(size(similarity_matrix)) == 1) = 5;
+        similarity_matrix = squeeze(mean(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
     end
 end
 
@@ -430,4 +432,4 @@ if user_settings.save_intermediate_results
 end
 
 % clear temp variables
-clear similarity similarity_all similarity_matrix distance_matrix hdbscan_matrix similarity_waveform similarity_ISI similarity_AutoCorr similarity_PETH;
+clear temp similarity similarity_all similarity_matrix distance_matrix hdbscan_matrix similarity_waveform similarity_ISI similarity_AutoCorr similarity_PETH;

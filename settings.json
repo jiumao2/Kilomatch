@@ -16,8 +16,7 @@
     // parameters for waveform correction
     "waveformCorrection":{
         "interpolate_algorithm": "Krig", // "Krig", "Raw", "Nearest", "IDW"
-        "n_nearest_channels": 36, // number of channels used for similarity calculation
-        "n_channels_precomputed": 100 // precomputed the corrected waveforms for acceleration
+        "n_nearest_channels": 38 // number of channels used for similarity calculation
     },
 
     // autocorrelogram similarity related parameters
@@ -35,7 +34,7 @@
 
     // parameters for motion estimation
     "motionEstimation":{
-        "max_motion_distance": 100, // um. Unit pairs with distance larger than this value in Y direction will not be included for motion estimation
+        "max_distance": 100, // um. Unit pairs with distance larger than this value in Y direction will not be included for motion estimation
         "features": ["Waveform", "AutoCorr", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
         "n_iter": 10, // number of iterations for the clustering algorithm
         "n_block": 1 // 1 for rigid motion estimation

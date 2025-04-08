@@ -1,5 +1,6 @@
 %% Recompute the similarities
 max_distance = user_settings.clustering.max_distance;
+n_nearest_channels = user_settings.waveformCorrection.n_nearest_channels;
 
 corrected_locations = zeros(1, length(spikeInfo));
 for k = 1:length(corrected_locations)
@@ -17,66 +18,103 @@ idx_unit_pairs = [idx_row(idx_good), idx_col(idx_good)];
 session_pairs = [[spikeInfo(idx_unit_pairs(:,1)).SessionIndex]', [spikeInfo(idx_unit_pairs(:,2)).SessionIndex]'];
 n_pairs = size(idx_unit_pairs, 1);
 
-% clear temp variables to save memory
-clear corrected_locations y_distance_matrix idx_row idx_col idx_good;
+% compute waveform similarity
+channel_locations = [spikeInfo(1).Xcoords, spikeInfo(1).Ycoords];
+idx_nearest = knnsearch(channel_locations, channel_locations, 'K', n_nearest_channels);
+idx_nearest_sorted = sort(idx_nearest, 2);
 
-%%
-similarity_waveform = zeros(n_pairs, 1);
-similarity_raw_waveform = zeros(n_pairs, 1);
-similarity_ISI = zeros(n_pairs, 1);
-similarity_AutoCorr = zeros(n_pairs, 1);
-similarity_PETH = zeros(n_pairs, 1);
+[idx_nearest_unique, ~, idx_groups] = unique(idx_nearest_sorted, 'rows');
 
-% compute similarity
-% start parallel pool
-if isempty(gcp('nocreate'))
-    parpool();
-end
+waveform_similarity_matrix_corrected = zeros(length(spikeInfo));
 
-disp('Start computing similarity!');
-progBar = ProgressBar(n_pairs, ...
-    'IsParallel', true, ...
-    'Title', 'Computing Similarity', ...
-    'UpdateRate', 1 ...
-    );
-progBar.setup([], [], []);
+ptt = max(waveforms_corrected,[],3) - min(waveforms_corrected,[],3);
+[~, ch] = max(ptt, [], 2);
 
-parfor k = 1:n_pairs
-    idx_A = idx_unit_pairs(k,1);
-    idx_B = idx_unit_pairs(k,2);
+progBar = ProgressBar(size(idx_nearest_unique, 1), ...
+    'Title', 'Computing waveform features', ...
+    'UpdateRate', 1);
+for k = 1:size(idx_nearest_unique, 1)
+    idx_included = find(idx_groups == k);
+    idx_units = find(arrayfun(@(x)any(idx_included==x), ch));
+
+    if isempty(idx_units)
+        progBar([], [], []);
+        continue
+    end
+
+    waveform_this = reshape(waveforms_corrected(:, idx_nearest_unique(k,:), :),...
+        length(spikeInfo), []);
+
+    temp = corrcoef(waveform_this');
+    temp(isnan(temp)) = 0;
+    temp = atanh(temp);
     
-    if any(strcmpi(user_settings.clustering.features, 'Waveform'))
-        similarity_waveform(k) = waveformSimilarity(waveforms_corrected([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:),...
-            user_settings.waveformCorrection.n_nearest_channels);
-        similarity_raw_waveform(k) = waveformSimilarity(waveforms([idx_A,idx_B],:,:), waveform_channels([idx_A,idx_B],:),...
-            user_settings.waveformCorrection.n_nearest_channels);
-    end
-    
-    if any(strcmpi(user_settings.clustering.features, 'ISI'))
-        similarity_ISI(k) = computeSimilarity(ISI_features(idx_A, :), ISI_features(idx_B, :));
-    end
+    waveform_similarity_matrix_corrected(idx_units,:) = temp(idx_units,:);
 
-    if any(strcmpi(user_settings.clustering.features, 'AutoCorr'))
-        similarity_AutoCorr(k) = computeSimilarity(AutoCorr_features(idx_A, :), AutoCorr_features(idx_B, :));
-    end
-
-    if any(strcmpi(user_settings.clustering.features, 'PETH'))
-        similarity_PETH(k) = computeSimilarity(PETH_features(idx_A, :), PETH_features(idx_B, :));
-    end
-    
-    updateParallel(1);
+    progBar([], [], []);
 end
 progBar.release();
+
+waveform_similarity_matrix_corrected = max(...
+    cat(3, waveform_similarity_matrix_corrected, waveform_similarity_matrix_corrected'),...
+    [], 3);
+
+n_unit = length(spikeInfo);
+
+similarity_waveform = arrayfun(...
+        @(x)waveform_similarity_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs)';
+
+similarity_ISI = zeros(n_pairs, 1);
+ISI_similarity_matrix = zeros(n_unit);
+if any(strcmpi(user_settings.motionEstimation.features, 'ISI'))
+    ISI_similarity_matrix = corrcoef(ISI_features');
+    ISI_similarity_matrix(isnan(ISI_similarity_matrix)) = 0;
+    ISI_similarity_matrix = atanh(ISI_similarity_matrix);
+
+    similarity_ISI = arrayfun(...
+        @(x)ISI_similarity_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs)';
+end
+
+similarity_AutoCorr = zeros(n_pairs, 1);
+AutoCorr_similarity_matrix = zeros(n_unit);
+if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr'))
+    AutoCorr_similarity_matrix = corrcoef(AutoCorr_features');
+    AutoCorr_similarity_matrix(isnan(AutoCorr_similarity_matrix)) = 0;
+    AutoCorr_similarity_matrix = atanh(AutoCorr_similarity_matrix);
+
+    similarity_AutoCorr = arrayfun(...
+        @(x)AutoCorr_similarity_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs)';
+end
+
+similarity_PETH = zeros(n_pairs, 1);
+PETH_similarity_matrix = zeros(n_unit);
+if any(strcmpi(user_settings.motionEstimation.features, 'PETH'))
+    PETH_similarity_matrix = corrcoef(PETH_features');
+    PETH_similarity_matrix(isnan(PETH_similarity_matrix)) = 0;
+    PETH_similarity_matrix = atanh(PETH_similarity_matrix);
+
+    similarity_PETH = arrayfun(...
+        @(x)PETH_similarity_matrix(idx_unit_pairs(x,1), idx_unit_pairs(x,2)), 1:n_pairs)';
+end
+
+similarity_matrix_all = cat(3,...
+    waveform_similarity_matrix,...
+    ISI_similarity_matrix,...
+    AutoCorr_similarity_matrix,...
+    PETH_similarity_matrix);
 
 fprintf('Computing similarity done! Saved to %s ...\n', fullfile(user_settings.output_folder, 'AllSimilarity.mat'));
 toc;
 
 if user_settings.save_intermediate_results
     save(fullfile(user_settings.output_folder, 'AllSimilarity.mat'),...
-        'similarity_waveform', 'similarity_raw_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH',...
+        'similarity_waveform', 'similarity_ISI', 'similarity_AutoCorr', 'similarity_PETH',...
         'idx_unit_pairs', 'session_pairs', '-nocompression');
 end
 
+% clear temp variables to save memory
+clear temp waveform_similarity_matrix_corrected ISI_similarity_matrix AutoCorr_similarity_matrix PETH_similarity_matrix...
+    waveforms_corrected corrected_locations y_distance_matrix idx_row idx_col idx_good;
 %%
 fig = EasyPlot.figure();
 ax_waveform = EasyPlot.axes(fig,...
