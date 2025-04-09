@@ -165,7 +165,7 @@ similarity_all = similarity_all(:, idx_names);
 similarity_matrix_all = similarity_matrix_all(:,:,idx_names);
 
 weights = ones(1, n_features)./n_features;
-similarity_matrix = squeeze(mean(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
+similarity_matrix = squeeze(sum(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
 
 % iterative clustering
 for iter = 1:user_settings.motionEstimation.n_iter
@@ -227,7 +227,7 @@ for iter = 1:user_settings.motionEstimation.n_iter
         disp(weights);
         
         % update the similarity matrix
-        similarity_matrix = squeeze(mean(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
+        similarity_matrix = squeeze(sum(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
     end
 end
 
