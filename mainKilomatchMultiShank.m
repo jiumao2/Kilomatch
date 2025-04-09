@@ -69,9 +69,7 @@ Output = struct(...
     'Motion', [],...
     'Nblock', user_settings.motionEstimation.n_block);
 
-waveform_channels = zeros(length(spikeInfo), user_settings.waveformCorrection.n_channels_precomputed);
-waveforms = zeros(length(spikeInfo), user_settings.waveformCorrection.n_channels_precomputed, size(spikeInfo(1).Waveform, 2));
-waveforms_corrected = zeros(length(spikeInfo), user_settings.waveformCorrection.n_channels_precomputed, size(spikeInfo(1).Waveform, 2));
+waveforms_corrected = zeros(length(spikeInfo), size(spikeInfo(1).Waveform, 1), size(spikeInfo(1).Waveform, 2));
 
 n_cluster = 0;
 n_units = 0;
@@ -108,8 +106,6 @@ for i_shank = 1:length(shankIDs)
     Output.RunTime = data.Output.RunTime; % save the run time of the final shank
     
     % update waveforms
-    waveform_channels(idx_units,:) = data_waveforms.waveform_channels;
-    waveforms(idx_units,:,:) = data_waveforms.waveforms;
     waveforms_corrected(idx_units,:,:) = data_waveforms.waveforms_corrected;
 
     n_cluster = n_cluster + data.Output.NumClusters;
@@ -120,5 +116,5 @@ Output.NumClusters = n_cluster;
 % Save the combined output
 fprintf('Saving Output to %s ...\n', fullfile(output_folder, 'Output.mat'));
 save(fullfile(output_folder, 'Output.mat'), 'Output', '-nocompression');
-save(fullfile(output_folder, 'Waveforms.mat'), 'waveform_channels', 'waveforms', 'waveforms_corrected', '-nocompression');
+save(fullfile(output_folder, 'Waveforms.mat'), 'waveforms_corrected', '-nocompression');
 
