@@ -60,7 +60,7 @@ progBar.release();
 %% Compute spike times related features
 spike_times = cell(1, n_unit);
 for k = 1:n_unit
-    spike_times{k} = spikeInfo(k).SpikeTimes;
+    spike_times{k} = sort(spikeInfo(k).SpikeTimes);
 end
 
 if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr')) ||...
@@ -75,7 +75,7 @@ if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr')) ||...
     window = user_settings.autoCorr.window; % ms   
     sigma = user_settings.autoCorr.gaussian_sigma;
     auto_corr_all = zeros(n_unit, 2*window+1);
-    parfor k = 1:n_unit
+    for k = 1:n_unit
         st_this = spike_times{k};
         st_this = st_this-st_this(1)+1;
         max_st = round(max(st_this))+1;
@@ -95,7 +95,7 @@ if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr')) ||...
     end
     progBar.release();
 end
-
+%%
 if any(strcmpi(user_settings.motionEstimation.features, 'ISI')) ||...
             any(strcmpi(user_settings.clustering.features, 'ISI'))
     progBar = ProgressBar(n_unit, ...
