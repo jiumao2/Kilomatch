@@ -53,7 +53,7 @@ for k = 1:length(spikeInfo)
     waveform_all(k,:,:) = spikeInfo(k).Waveform;
 end
 
-ptt = max(waveforms_corrected,[],3) - min(waveforms_corrected,[],3);
+ptt = max(waveform_all,[],3) - min(waveform_all,[],3);
 [~, ch] = max(ptt, [], 2);
 
 progBar = ProgressBar(size(idx_nearest_unique, 1), ...
@@ -155,14 +155,16 @@ sessions = [spikeInfo.SessionIndex];
 n_session = max(sessions);
 
 similarity_names = user_settings.motionEstimation.features';
-idx_names = zeros(1, length(similarity_names));
-for k = 1:length(similarity_names)
+n_features = length(similarity_names);
+
+idx_names = zeros(1, n_features);
+for k = 1:n_features
     idx_names(k) = find(strcmpi(names_all, similarity_names{k}));
 end
 similarity_all = similarity_all(:, idx_names);
 similarity_matrix_all = similarity_matrix_all(:,:,idx_names);
 
-weights = ones(1, length(similarity_names))./length(similarity_names);
+weights = ones(1, n_features)./n_features;
 similarity_matrix = squeeze(mean(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
 
 % iterative clustering

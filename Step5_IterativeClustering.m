@@ -8,14 +8,16 @@ similarity_all = [similarity_waveform, similarity_ISI, similarity_AutoCorr, simi
 n_pairs = size(similarity_all, 1);
 
 similarity_names = user_settings.clustering.features';
-idx_names = zeros(1, length(similarity_names));
-for k = 1:length(similarity_names)
+n_features = length(similarity_names);
+
+idx_names = zeros(1, n_features);
+for k = 1:n_features
     idx_names(k) = find(strcmpi(names_all, similarity_names{k}));
 end
 similarity_all = similarity_all(:, idx_names);
 similarity_matrix_all = similarity_matrix_all(:,:,idx_names);
 
-weights = ones(1, length(similarity_names))./length(similarity_names);
+weights = ones(1, n_features)./n_features;
 similarity_matrix = squeeze(mean(similarity_matrix_all.*reshape(weights, 1, 1, n_features), 3));
 
 for iter = 1:user_settings.clustering.n_iter
