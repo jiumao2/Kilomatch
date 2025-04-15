@@ -51,7 +51,7 @@
     "autoCuration":{
         "reject_threshold": 0.1, // atanh() transform of the correlation coefficient. Good clusters should have all pair-wise similarity larger than this threshold
         "auto_split": true, // whether to split the clusters automatically
-        "auto_merge": true // whether to merge the clusters automatically
+        "auto_merge": false // whether to merge the clusters automatically
     }
 }
 

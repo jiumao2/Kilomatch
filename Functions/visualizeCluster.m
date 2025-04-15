@@ -1,4 +1,4 @@
-function visualizeCluster(Output, cluster_id, spikeInfo, waveformsAll, user_settings)
+function visualizeCluster(Output, cluster_id, spikeInfo, waveforms, user_settings)
 % (1) Positions on the probe vs. sessions
 % (2) Overlapped waveforms
 % (3) ISI, AutoCorr, PC, PETH
@@ -13,9 +13,7 @@ sessions = sessions(idx_sort);
 locations = Output.Locations(units, 1:2) - Output.Motion(sessions)';
 colors = winter(length(units));
 
-waveforms = waveformsAll.waveforms_corrected(units,:,:);
-waveform_channels = waveformsAll.waveform_channels(units,:);
-
+waveforms = waveforms(units,:,:);
 ISI = cat(1, spikeInfo(units).ISI);
 AutoCorr = cat(1, spikeInfo(units).AutoCorr);
 AutoCorr(:, (size(AutoCorr, 2)+1)/2) = NaN;
@@ -45,23 +43,18 @@ xlabel(ax_depth, 'Sessions');
 ylabel(ax_depth, 'Depth (um)');
 
 % waveforms
-ch = mode(waveform_channels(:,1));
-amplitude = max(max(squeeze(waveforms(:,1,:)), [], 2) - min(squeeze(waveforms(:,1,:)), [], 2));
+ptt = max(waveforms,[],3) - min(waveforms,[],3);
+[~, peak_channels] = max(ptt, [], 2);
+ch = mode(peak_channels);
+amplitude = max(ptt(:));
 
 n_channels = 20;
-n_samples = size(waveforms, 3);
 channel_locations = [spikeInfo(1).Xcoords, spikeInfo(1).Ycoords];
 distance_to_location = sqrt(sum((channel_locations - channel_locations(ch,:)).^2, 2));
 [~, idx_sort] = sort(distance_to_location);
 ch_included = idx_sort(1:n_channels);
+waveforms_plot = waveforms(:,ch_included,:);
 
-waveforms_plot = zeros(length(units), n_channels, n_samples);
-for k = 1:length(units)
-    for j = 1:n_channels
-        idx = waveform_channels(k,:) == ch_included(j);
-        waveforms_plot(k,j,:) = waveforms(k, idx, :);
-    end
-end
 
 x_plot = cell(1, length(units));
 y_plot = cell(1, length(units));
@@ -111,12 +104,43 @@ overlaps = {...
     ISI,...
     AutoCorr,...
     PETH};
+
+WaveformSimilarityMatrix = NaN(length(units));
+ISI_SimilarityMatrix = NaN(length(units));
+AutoCorrSimilalrityMatrix = NaN(length(units));
+PETH_SimilarityMatrix = NaN(length(units));
+
+for k = 1:size(Output.SimilarityPairs, 1)
+    if ~any(units == Output.SimilarityPairs(k,1)) || ~any(units == Output.SimilarityPairs(k,2))
+        continue
+    end
+    
+    idx1 = find(units == Output.SimilarityPairs(k,1));
+    idx2 = find(units == Output.SimilarityPairs(k,2));
+
+    for j = 1:length(Output.SimilarityNames)
+        if strcmpi(Output.SimilarityNames{j}, 'waveform')
+            WaveformSimilarityMatrix(idx1,idx2) = Output.SimilarityAll(k,j);
+            WaveformSimilarityMatrix(idx2,idx1) = Output.SimilarityAll(k,j);
+        elseif strcmpi(Output.SimilarityNames{j}, 'ISI')
+            ISI_SimilarityMatrix(idx1,idx2) = Output.SimilarityAll(k,j);
+            ISI_SimilarityMatrix(idx2,idx1) = Output.SimilarityAll(k,j);
+        elseif strcmpi(Output.SimilarityNames{j}, 'AutoCorr')
+            AutoCorrSimilalrityMatrix(idx1,idx2) = Output.SimilarityAll(k,j);
+            AutoCorrSimilalrityMatrix(idx2,idx1) = Output.SimilarityAll(k,j);
+        elseif strcmpi(Output.SimilarityNames{j}, 'PETH')
+            PETH_SimilarityMatrix(idx1,idx2) = Output.SimilarityAll(k,j);
+            PETH_SimilarityMatrix(idx2,idx1) = Output.SimilarityAll(k,j);
+        end
+    end
+end
+
 similarity_matrix = {...
     Output.SimilarityMatrix(units, units),...
-    Output.WaveformSimilarityMatrix(units, units),...
-    Output.ISI_SimilarityMatrix(units, units),...
-    Output.AutoCorrSimilalrityMatrix(units, units),...
-    Output.PETH_SimilarityMatrix(units, units),...
+    WaveformSimilarityMatrix,...
+    ISI_SimilarityMatrix,...
+    AutoCorrSimilalrityMatrix,...
+    PETH_SimilarityMatrix,...
     };
 
 names_all = {'Waveform', 'ISI', 'AutoCorr', 'PETH'};

@@ -4,9 +4,9 @@ close all;
 
 % Visualization of the quality of each clusters
 if user_settings.plot_clusters
-    waveformsAll = load(fullfile(user_settings.output_folder, 'Waveforms.mat'));
+    load(fullfile(user_settings.output_folder, 'Waveforms.mat'));
     for k = 1:Output.NumClusters
-        visualizeCluster(Output, k, spikeInfo, waveformsAll, user_settings);
+        visualizeCluster(Output, k, spikeInfo, waveforms_corrected, user_settings);
         close all;
     end
 end
