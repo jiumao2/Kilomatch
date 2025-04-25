@@ -14,10 +14,22 @@ locations = Output.Locations(units, 1:2) - Output.Motion(sessions)';
 colors = winter(length(units));
 
 waveforms = waveforms(units,:,:);
-ISI = cat(1, spikeInfo(units).ISI);
-AutoCorr = cat(1, spikeInfo(units).AutoCorr);
-AutoCorr(:, (size(AutoCorr, 2)+1)/2) = NaN;
-PETH = cat(1, spikeInfo(units).PETH);
+
+ISI = [];
+if isfield(spikeInfo, 'ISI')
+    ISI = cat(1, spikeInfo(units).ISI);
+end
+
+AutoCorr = [];
+if isfield(spikeInfo, 'AutoCorr')
+    AutoCorr = cat(1, spikeInfo(units).AutoCorr);
+    AutoCorr(:, (size(AutoCorr, 2)+1)/2) = NaN;
+end
+
+PETH = [];
+if isfield(spikeInfo, 'PETH')
+    PETH = cat(1, spikeInfo(units).PETH);
+end
 
 fig = EasyPlot.figure();
 
