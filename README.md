@@ -104,7 +104,7 @@ Specify the Python executable path in `settings.json` (e.g., `"path_to_python": 
 > [DREDge](https://github.com/evarol/DREDge)  
 > Robust online multiband drift estimation in electrophysiology data  
 > 
-> DREDge: robust motion correction for high-density extracellular recordings across species. https://www.biorxiv.org/content/10.1101/2023.10.24.563768v1
+> Windolf, Charlie, Han Yu, Angelique C. Paulk, Domokos Meszéna, William Muñoz, Julien Boussard, Richard Hardstone, et al. “DREDge: Robust Motion Correction for High-Density Extracellular Recordings across Species.” Nature Methods, March 6, 2025. https://doi.org/10.1038/s41592-025-02614-5.
 
 > [EasyPlot](https://github.com/jiumao2/EasyPlot)  
 > A MATLAB package for making scientific figures easily
