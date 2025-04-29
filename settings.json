@@ -35,9 +35,11 @@
     // parameters for motion estimation
     "motionEstimation":{
         "max_distance": 100, // um. Unit pairs with distance larger than this value in Y direction will not be included for motion estimation
-        "features": ["Waveform", "AutoCorr", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
-        "n_iter": 10, // number of iterations for the clustering algorithm
-        "n_block": 1 // 1 for rigid motion estimation
+        "features": [
+            ["Waveform", "AutoCorr", "PETH"],
+            ["Waveform", "AutoCorr", "PETH"]
+        ], // features used for motion estimation each iteration. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
+        "n_iter": 10 // number of iterations for the clustering algorithm
     },
 
     // parameters for clustering

@@ -1,6 +1,5 @@
-%% load the data
-fprintf('Loading %s...\n', user_settings.path_to_data);
-load(user_settings.path_to_data);
+function spikeInfo = preprocessSpikeInfo(user_settings, spikeInfo)
+% spikeInfo: 1 x n_unit struct
 
 % make a folder to store the data
 if ~exist(fullfile(user_settings.output_folder), 'dir')
@@ -13,23 +12,18 @@ if ~exist(fullfile(user_settings.output_folder, 'Figures'), 'dir')
     mkdir(fullfile(user_settings.output_folder, 'Figures'));
 end
 
-%% validate the data
+% validate the data
 n_session = max([spikeInfo.SessionIndex]);
 if n_session ~= length(unique([spikeInfo.SessionIndex]))
     error('SessionIndex should start from 1 and be coninuous without any gaps!');
 end
 
-%% preprocessing data
-chanMap.xcoords = spikeInfo(1).Xcoords;
-chanMap.ycoords = spikeInfo(1).Ycoords;
-chanMap.kcoords = spikeInfo(1).Kcoords;
-chanMap.connected = ones(1, length(spikeInfo(1).Xcoords));
+% preprocessing data
+channel_locations = [spikeInfo(1).Xcoords, spikeInfo(1).Ycoords];
 
 n_unit = length(spikeInfo);
-waveforms = zeros(n_unit, size(spikeInfo(1).Waveform, 1), size(spikeInfo(1).Waveform, 2));
-for k = 1:length(spikeInfo)
-    waveforms(k,:,:) = spikeInfo(k).Waveform;
-end
+waveforms_all = cat(3, spikeInfo.Waveform);
+waveforms_all = permute(waveforms_all, [3,1,2]);
 
 % start parallel pool
 if isempty(gcp('nocreate'))
@@ -46,7 +40,7 @@ progBar.setup([], [], []);
 locations_all = zeros(n_unit, 3);
 amp_all = zeros(n_unit, 1);
 parfor k = 1:n_unit
-    [x, y, z, amp] = spikeLocation(squeeze(waveforms(k,:,:)), chanMap,...
+    [x, y, z, amp] = spikeLocation(squeeze(waveforms_all(k,:,:)), channel_locations,...
         user_settings.spikeLocation.n_nearest_channels,...
         user_settings.spikeLocation.location_algorithm);
 
@@ -57,7 +51,7 @@ parfor k = 1:n_unit
 end
 progBar.release();
 
-%% Compute spike times related features
+% Compute spike times related features
 spike_times = cell(1, n_unit);
 for k = 1:n_unit
     spike_times{k} = sort(spikeInfo(k).SpikeTimes);
@@ -95,7 +89,7 @@ if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr')) ||...
     end
     progBar.release();
 end
-%%
+
 if any(strcmpi(user_settings.motionEstimation.features, 'ISI')) ||...
             any(strcmpi(user_settings.clustering.features, 'ISI'))
     progBar = ProgressBar(n_unit, ...
@@ -124,8 +118,7 @@ if any(strcmpi(user_settings.motionEstimation.features, 'ISI')) ||...
     progBar.release();
 end
 
-
-%% Collect all preprocessed data
+% Collect all preprocessed data
 for k = 1:n_unit
     % get the location of each unit
     spikeInfo(k).Location = locations_all(k,:);
@@ -151,4 +144,11 @@ end
 % Save the preprocessed data
 fprintf('Saving to %s...\n', fullfile(user_settings.output_folder, 'spikeInfo.mat'));
 save(fullfile(user_settings.output_folder, 'spikeInfo.mat'), 'spikeInfo', '-nocompression');
+
+end
+
+
+
+
+
 

@@ -1,4 +1,9 @@
+function [hdbscan_matrix_curated, idx_cluster_hdbscan_curated] = autoCuration(...
+    user_settings, hdbscan_matrix, idx_cluster_hdbscan, good_matches_matrix, ...
+    sessions, similarity_matrix, leafOrder)
+
 reject_thres = user_settings.autoCuration.reject_threshold; 
+n_unit = size(similarity_matrix, 1);
 
 n_cluster = max(idx_cluster_hdbscan);
 fprintf('%d clusters and %d pairs before removing bad units!\n',...
@@ -91,14 +96,14 @@ for k = 1:n_cluster
         end
     end
 end
-hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
+hdbscan_matrix(eye(n_unit) == 1) = 1;
 
 [num_same, num_before, num_after] = graphEditNumber(hdbscan_matrix_raw, hdbscan_matrix);
 assert(num_same == num_after);
 
 fprintf('%d deleting steps are done!\n', num_before-num_after);
 fprintf('%d clusters and %d pairs after removing bad units!\n',...
-    n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
+    n_cluster, (sum(hdbscan_matrix(:)) - n_unit)/2);
 
 % merge when two or more adjacent clusters are similar and do not contain units from the same sessions
 if user_settings.autoCuration.auto_merge
@@ -195,14 +200,14 @@ if user_settings.autoCuration.auto_merge
             end
         end
     end
-    hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
+    hdbscan_matrix(eye(n_unit) == 1) = 1;
     
     [num_same, num_before, num_after] = graphEditNumber(hdbscan_matrix_raw, hdbscan_matrix);
     assert(num_same == num_before);
     
     fprintf('%d merging steps are done!\n', -num_before+num_after);
     fprintf('%d clusters and %d pairs after merging good clusters!\n',...
-        n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
+        n_cluster, (sum(hdbscan_matrix(:)) - n_unit)/2);
     
     % find possible pairings for unpaired units
     disp('Checking the unpaired units!');
@@ -255,32 +260,14 @@ if user_settings.autoCuration.auto_merge
             end
         end
     end
-    hdbscan_matrix(eye(length(leafOrder)) == 1) = 1;
+    hdbscan_matrix(eye(n_unit) == 1) = 1;
     
     fprintf('%d clusters and %d pairs after merging good unpaired units!\n',...
-        n_cluster, (sum(hdbscan_matrix(:)) - length(leafOrder))/2);
+        n_cluster, (sum(hdbscan_matrix(:)) - n_unit)/2);
 end    
 
 hdbscan_matrix_curated = hdbscan_matrix;
 idx_cluster_hdbscan_curated = idx_cluster_hdbscan;
-
-
-%% get all matched pairs
-matched_pairs_curated = [];
-for k = 1:length(hdbscan_matrix_curated)
-    for j = k+1:length(hdbscan_matrix_curated)
-        if hdbscan_matrix_curated(k,j) == 1
-            matched_pairs_curated = [matched_pairs_curated; k, j];
-        end
-    end
-end
-
-%% save the curated result
-if user_settings.save_intermediate_results
-    save(fullfile(user_settings.output_folder, 'CurationResults.mat'),...
-        'hdbscan_matrix_curated', 'idx_cluster_hdbscan_curated', 'matched_pairs_curated',...
-        'similarity_matrix', 'sessions', 'leafOrder', '-nocompression');
-end
 
 % Plot the final results
 fig = EasyPlot.figure();
@@ -295,7 +282,7 @@ imagesc(ax_all{1}, hdbscan_matrix_curated(leafOrder,leafOrder));
 imagesc(ax_all{2}, similarity_matrix(leafOrder,leafOrder));
 
 EasyPlot.setCLim(ax_all{2}, [0, 4]);
-h = EasyPlot.colorbar(ax_all{2},...
+EasyPlot.colorbar(ax_all{2},...
     'label', 'Similarity',...
     'MarginRight', 1);
 
@@ -311,33 +298,6 @@ EasyPlot.cropFigure(fig);
 if user_settings.save_figures
     EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/CuratedResult'));
 end
-%% save the final output
-Output = struct();
-Output.NumClusters = max(idx_cluster_hdbscan_curated);
-Output.NumUnits = length(idx_cluster_hdbscan_curated);
-Output.Locations = cat(1, spikeInfo.Location); % NumUnits x 3;
-Output.IdxSort = leafOrder;
-Output.IdxCluster = idx_cluster_hdbscan_curated;
-Output.SimilarityMatrix = similarity_matrix; % the output similarity
-Output.SimilarityAll = similarity_all;
-Output.SimilarityPairs = idx_unit_pairs; % the pairs used to compute similarity_all
-Output.SimilarityNames = similarity_names;
-Output.SimilarityWeights = weights;
-Output.SimilarityThreshold = thres;
-Output.GoodMatchesMatrix = good_matches_matrix;
-Output.ClusterMatrix = hdbscan_matrix_curated;
-Output.MatchedPairs = matched_pairs_curated;
-Output.Params = user_settings;
-Output.NumSession = max(sessions);
-Output.Sessions = sessions;
-Output.Motion = positions;
-Output.Nblock = nblock;
-Output.RunTime = toc;
 
-save(fullfile(user_settings.output_folder, 'Output.mat'), 'Output', '-nocompression');
-fprintf('Kilomatch done! Output is saved to %s!\n', fullfile(user_settings.output_folder, 'Output.mat'));
-fprintf('Found %d clusters and %d matches from %d units during %d sessions!\n',...
-    Output.NumClusters, size(Output.MatchedPairs, 1), Output.NumUnits, Output.NumSession);
 
-close all;
-
+end

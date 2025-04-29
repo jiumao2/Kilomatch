@@ -69,15 +69,8 @@ Specify the Python executable path in `settings.json` (e.g., `"path_to_python": 
     - `SimilarityThreshold`: a 1 x 1 double of the threshold which is used to determine the good matches in `GoodMatchesMatrix` used in the auto-curation algorithm.
     - `GoodMatchesMatrix`: an n_unit x n_unit logical matrix of the good matches determined by `SimilarityThreshold`. `GoodMatchesMatrix(i,j) = 1` means unit `i` and `j` is a good match.
     - `SimilarityMatrix`: an n_unit x n_unit double matrix of the weighted sum of the similarity between each pair of units.
-    
-    - `WaveformSimilarityMatrix`: an n_unit x n_unit double matrix of the waveform similarity between each pair of units.
-    - `RawWaveformSimilarityMatrix`: an n_unit x n_unit double matrix of the raw (uncorrected) waveform similarity between each pair of units.
-    - `ISI_SimilarityMatrix`: an n_unit x n_unit double matrix of the ISI similarity between each pair of units.
-    - `AutoCorrSimilalrityMatrix`: an n_unit x n_unit double matrix of the autocorrelogram similarity between each pair of units.
-    - `PETH_SimilarityMatrix`: an n_unit x n_unit double matrix of the PETH similarity between each pair of units.
 
     - `Motion`: a 1 x n_session double array of the positions of the electrode in each session.
-    - `Nblock`: a 1 x 1 int scalar of the number of blocks used in the motion correction.
 
     - `RunTime`: a 1 x 1 double of the total run time of the analysis in seconds.
 

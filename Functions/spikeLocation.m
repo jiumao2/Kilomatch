@@ -1,4 +1,4 @@
-function [x, y, z, ptt] = spikeLocation(waveforms_mean, chanMap, n_nearest_channels, algorithm)
+function [x, y, z, ptt] = spikeLocation(waveforms_mean, channel_locations, n_nearest_channels, algorithm)
 % waveforms_mean: n_channel x n_sample double
 % chanMap: struct
 % n_nearest_channels: 1 x 1 double about how many channels to include
@@ -17,11 +17,6 @@ if nargin < 4
 end
 
 % get n_nearest_channels from the channels with the largest peak-to-trough value
-chanMap.xcoords = chanMap.xcoords(chanMap.connected == 1);
-chanMap.ycoords = chanMap.ycoords(chanMap.connected == 1);
-
-channel_locations = [chanMap.xcoords, chanMap.ycoords];
-
 peaks_to_trough = max(waveforms_mean, [], 2) - min(waveforms_mean, [], 2);
 [~, idx_max] = max(peaks_to_trough);
 

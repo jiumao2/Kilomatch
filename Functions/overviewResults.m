@@ -1,4 +1,4 @@
-function overviewResults(Output, user_settings)
+function overviewResults(user_settings, Output)
 % (1) Unit number across sessions (position on the probe)
 % (2) Motion and matched units' position
 % (3) Similairty distribution
