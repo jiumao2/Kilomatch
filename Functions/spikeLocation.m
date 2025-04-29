@@ -1,6 +1,6 @@
 function [x, y, z, ptt] = spikeLocation(waveforms_mean, channel_locations, n_nearest_channels, algorithm)
 % waveforms_mean: n_channel x n_sample double
-% chanMap: struct
+% channel_locations: n_channel x 2 double
 % n_nearest_channels: 1 x 1 double about how many channels to include
 % algorithm: 'center_of_mass' or 'monopolar_triangulation'
 %
