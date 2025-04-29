@@ -69,4 +69,8 @@ if user_settings.save_figures
     EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/AllSimilarity'));
 end
 
+if user_settings.save_intermediate_results
+    save(fullfile(user_settings.output_folder, 'SimilarityMatrix.mat'), 'similarity_matrix_all', 'feature_names_all', '-nocompression');
+end
+
 end
