@@ -15,7 +15,6 @@
     
     // parameters for waveform correction
     "waveformCorrection":{
-        "interpolate_algorithm": "Krig", // "Krig", "Raw", "Nearest", "IDW"
         "n_nearest_channels": 38 // number of channels used for similarity calculation
     },
 
