@@ -13,7 +13,7 @@ Check out the Python version of Kilomatch [here](https://github.com/jiumao2/pyKi
     - `Statistics and Machine Learning Toolbox`
     - `Optimization Toolbox`
     - `Parallel Computing Toolbox`
-- Python 3.9 ~ 3.11 with `hdbscan` package installed.
+- Python 3.9 ~ 3.11 with `scikit-learn` and `hdbscan` packages installed.
 
 ```shell
 conda create -n hdbscan python=3.10
