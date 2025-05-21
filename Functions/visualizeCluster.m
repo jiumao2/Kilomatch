@@ -13,7 +13,7 @@ sessions = sessions(idx_sort);
 locations = Output.Locations(units, 1:2) - Output.Motion(sessions)';
 colors = winter(length(units));
 
-waveforms = waveforms(units,:,:);
+waveforms = waveforms(units,:,:,1);
 
 ISI = [];
 if isfield(spikeInfo, 'ISI')
@@ -294,6 +294,6 @@ EasyPlot.cropFigure(fig);
 if ~exist(fullfile(user_settings.output_folder, 'Figures/Clusters/'), 'dir')
     mkdir(fullfile(user_settings.output_folder, 'Figures/Clusters/'));
 end
-EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Clusters', ['Cluster', num2str(cluster_id)]));
+EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Clusters', ['Cluster', num2str(cluster_id)]), 'dpi', 300);
 
 end

@@ -98,7 +98,7 @@ for i_shank = 1:length(shankIDs)
         sessions, similarity_matrix, leafOrder);
     
     % save the final output
-    Output = saveToOutput(user_settings,...
+    Output = saveToOutput(user_settings, spikeInfo,...
         idx_cluster_hdbscan_curated, hdbscan_matrix_curated, locations, leafOrder, ...
         similarity_matrix, similarity_all, idx_unit_pairs, feature_names, weights, thres, good_matches_matrix,...
         sessions, motion);
@@ -130,9 +130,10 @@ Output = struct(...
     'Params', user_settings,...
     'NumSession', n_session,...
     'Sessions', zeros(1, length(spikeInfo)),...
+    'SessionNames', cell(1, length(spikeInfo)),...
     'Motion', []);
 
-waveforms_corrected = zeros(length(spikeInfo), size(spikeInfo(1).Waveform, 1), size(spikeInfo(1).Waveform, 2));
+waveforms_corrected = zeros(length(spikeInfo), size(spikeInfo(1).Waveform, 1), size(spikeInfo(1).Waveform, 2), user_settings.waveformCorrection.n_templates);
 
 n_cluster = 0;
 n_units = 0;
@@ -164,12 +165,13 @@ for i_shank = 1:length(shankIDs)
     Output.MatchedPairs = [Output.MatchedPairs; matched_pairs];
 
     Output.Sessions(idx_units) = data.Output.Sessions;
+    Output.SessionNames(idx_units) = data.Output.SessionNames;
     Output.Motion = [Output.Motion; data.Output.Motion];
 
     Output.RunTime = data.Output.RunTime; % save the run time of the final shank
     
     % update waveforms
-    waveforms_corrected(idx_units,:,:) = data_waveforms.waveforms_corrected;
+    waveforms_corrected(idx_units,:,:,:) = data_waveforms.waveforms_corrected;
 
     n_cluster = n_cluster + data.Output.NumClusters;
 end
