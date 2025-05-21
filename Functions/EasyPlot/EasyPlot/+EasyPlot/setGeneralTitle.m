@@ -12,7 +12,11 @@ function handle = setGeneralTitle(axes_all, label, varargin)
         posLeft = min(posLeft, axes_all{k}.Position(1));
         posRight = max(posRight, axes_all{k}.Position(1)+axes_all{k}.Position(3));
     end
-    posTop = axes_all{1}.Position(2)+axes_all{1}.Position(4);
+
+    posTop = -1e8;
+    for k = 1:length(axes_all)
+        posTop = max(posTop, axes_all{k}.Position(2)+axes_all{k}.Position(4));
+    end
 
     pos = [posLeft-1,posTop,posRight-posLeft+2,height];
     

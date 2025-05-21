@@ -2,8 +2,8 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 - [EasyPlot documentation](#easyplot-documentation)
-
-- [Basic usage](#basic-usage)
+  - [Figure and axes](#figure-and-axes)
+  - [Plots](#plots)
   - [Layouts](#layouts)
   - [Create figures / axes](#create-figures--axes)
   - [Axes methods](#axes-methods)
@@ -11,6 +11,7 @@
     - [[xyz]label methods](#xyzlabel-methods)
     - [[xyz]ticks methods](#xyzticks-methods)
     - [title methods](#title-methods)
+    - [legend methods](#legend-methods)
     - [Move axes](#move-axes)
     - [Using `set`](#using-set)
     - [Truncate axes](#truncate-axes)
@@ -21,17 +22,43 @@
     - [boundedLine](#boundedline)
     - [violinplot](#violinplot)
     - [venn](#venn)
-  - [Colormaps](#colormaps)
+    - [stairs](#stairs)
+    - [boxplot](#boxplot)
   - [Default settings](#default-settings)
   - [Export](#export)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-## Basic usage  
 
-### Layouts
+## Figure and axes  
+
+- In MATLAB, the figure acts as a container for the axes. Multiple axes can be created in a single figure, such as normal plots, colorbars, legends, annotations, scalebars and etc. Nearly all the elements in the figure are axes objects. Figures and axes in `EasyPlot` are basically the same things as in MATLAB.  
+
+- Typically, the positions of each axes should be carefully calculated to produce a nice figure. However, it is difficult to calculate them and adjust the positions upon new ideas. `EasyPlot` is designed to place the axes objects based on their relative positions instead of abosolute positions. This makes it easy to create and adjust the figures.
+
+- In `EasyPlot`, you are allowed to manipulate multiple axes simultaneously, such as setting properties, moving, aligning and etc. Just put the axes in a cell array and use the `EasyPlot` methods.  
+
+## Plots
+
+- In `EasyPlot`, it is strongly recommended to specify the axes when plotting. For example,  
+
+```matlab
+fig = EasyPlot.figure();
+ax = EasyPlot.axes(fig);
+x = 1:10;
+y = sin(x);
+plot(ax, x, y); % specify the axes when plotting
+xlabel(ax, 'X label'); % specify the axes when setting the label
+xlim(ax, [0, 10]); % specify the axes when setting the limits
+```
+
+- All the MATLAB plotting methods are supported, such as `plot`, `scatter` and `histogram`. Just use them as you normally do.  
+
+## Layouts  
+
 - Every axes has 4 extra properties: `MarginLeft`, `MarginRight`, `MarginTop`, `MarginBottom`, which are similar to `HTML` web pages.
 - The figure also has 4 extra properties: `MarginLeft`, `MarginRight`, `MarginTop`, `MarginBottom`.
 - You can set the margins of the axes and the figure when creating them or using `EasyPlot.set` method.  
+
 ```matlab  
 fig = EasyPlot.figure('marginLeft', 0.5, 'marginRight', 0.5, 'marginTop', 0.5, 'marginBottom', 0.5);
 ax = EasyPlot.axes(fig, 'marginLeft', 1, 'marginRight', 0.5, 'marginTop', 0.5, 'marginBottom', 1);
@@ -39,15 +66,19 @@ ax = EasyPlot.axes(fig, 'marginLeft', 1, 'marginRight', 0.5, 'marginTop', 0.5, '
 EasyPlot.set(ax, 'marginLeft', 1, 'marginRight', 0.5, 'marginTop', 0.5, 'marginBottom', 1);
 ```
 
-- Crop the figure to set the figure size. Always do it at the end of the code.
+- Crop the figure to set the correct figure size. Always do it at the end of the code.
+
 ```matlab
 EasyPlot.cropFigure(fig);
 ```
+
 - After cropping, the final figure size is determined by the axes size and the margins.  
+
 ![](./doc/Layout.jpg)
 
-- To align the axes, use `EasyPlot.align` method.  
+- To align two axes or two groups of axes, use `EasyPlot.align` method.  
 - The position can be `'left'`, `'right'`, `'top'`, `'bottom'`, `'horizontalCenter'` or `'verticalCenter'`.
+
 ```matlab
 % Align the left edges of the axes
 EasyPlot.align(ax, ax_reference, 'left');
@@ -58,14 +89,16 @@ EasyPlot.align(ax, ax_reference, 'verticalCenter'); % the vertical center of the
 
 - To place the axes next to another axes, use `EasyPlot.place` method.  
 - The position can be `'left'`, `'right'`, `'top'` or `'bottom'`.
+
 ```matlab
 % Place the axes to the right of the reference axes
 EasyPlot.place(ax, ax_reference, 'right'); % the left edge of the axes is aligned to the right edge of the reference axes (considering the margins)
 ```
 
-### Create figures / axes  
-- When creating new figures / axes, please use `EasyPlot` methods instead of raw MATLAB methods.
-Example:
+## Create figures / axes  
+
+- When creating new figures / axes, please use `EasyPlot` methods instead of raw MATLAB methods. Example:
+
 ```matlab
 % Create a new figure
 fig = EasyPlot.figure();
@@ -76,7 +109,9 @@ cbar = EasyPlot.colorbar(ax);
 % Create an annotation
 ann = EasyPlot.annotation(fig, 'arrow');
 ```
+
 - EasyPlot provides some convenient methods to create axes.  
+
 ```matlab
 % Create grid axes of 2 rows and 3 columns
 ax_all = EasyPlot.createGridAxes(fig, 2, 3); % ax_all is a 2x3 cell array
@@ -92,18 +127,21 @@ ax_all_bottom = EasyPlot.copyAxes({ax1, ax2, ax3; ax4, ax5, ax6}, 'bottom'); % a
 marks = EasyPlot.markAxes(ax_all, {'A', 'B', 'C'});
 ```
 
-### Axes methods
+## Axes methods
+
 - All MATLAB axes methods are supported, while some extra methods are created for convenience.  
 
-#### [xyzc]Lim methods  
+### [xyzc]Lim methods  
+
 ```matlab
 % Sometimes you need to set the same limits for multiple axes
 EasyPlot.setYLim({ax1, ax2}, [0, 1]);
-% You may want to set the limits to the maximum and minimum values of the data
+% You may want to set the limits to the maximum and minimum values of the limits from all the axes
 EasyPlot.setYLim({ax1, ax2}, 'Largest');
 ```
 
-#### [xyz]label methods  
+### [xyz]label methods  
+
 ```matlab
 % Sometimes you need to set the same labels for multiple axes
 % For a column of axes, you may want to set the y label for all the axes
@@ -111,20 +149,25 @@ EasyPlot.setYLabelColumn({ax1, ax2, ax3}, 'Y label'); % ax1, ax2, ax3 are in a c
 % For a row of axes, you may want to set the y label for only the leftmost axes
 EasyPlot.setYLabelRow({ax1, ax2, ax3}, 'Y label'); % ax1, ax2, ax3 are in a row
 ```
+
 - You may want to hide the x/y axes to avoid redundancy.
+
 ```matlab
 EasyPlot.HideYAxis({ax1, ax2});
 % Also you can do it when creating the axes
 ax = EasyPlot.axes(fig, 'YAxisVisible', 'off');
 ```
+
 - You may want to set only one label in the middle instead of setting labels for all the axes.
+
 ```matlab
 EasyPlot.setGeneralXLabel({ax1, ax2, ax3}, 'X label');
 % Also you can set a general title
 EasyPlot.setGeneralTitle({ax1, ax2, ax3}, 'Title');
 ```
 
-#### [xyz]ticks methods
+### [xyz]ticks methods
+
 ```matlab
 % set the y ticks for multiple axes
 EasyPlot.setYTicks({ax1, ax2, ax3}, [0, 1, 2]);
@@ -141,14 +184,17 @@ EasyPlot.setYTicksAndLabels({ax1, ax2, ax3}, [0, 1, 2], [3, 4, 5]);
 EasyPlot.xtickangle({ax1, ax2, ax3}, 0);
 ```
 
-#### title methods
+### title methods
+
 ```matlab
 % set the title for multiple axes
 EasyPlot.setTitle({ax1, ax2, ax3}, 'Title', 'FontSize', 12, 'FontWeight', 'bold');
 ```
 
-#### legend methods
+### legend methods
+
 - It is hard in MATLAB to change the style of the legend. EasyPlot provides a convenient method to change the line and text of the legend.
+
 ```matlab
 % Create a legend
 h_legend = EasyPlot.legend(ax, {'A', 'B', 'C'}, 'location', 'northwest',...
@@ -157,7 +203,8 @@ h_legend = EasyPlot.legend(ax, {'A', 'B', 'C'}, 'location', 'northwest',...
         'fontSize', 7);
 ```  
 
-#### Move axes
+### Move axes
+
 ```matlab
 % Move the axes to the right by 1 cm
 EasyPlot.moveAxes(ax, 'dx', 1);
@@ -165,26 +212,33 @@ EasyPlot.moveAxes(ax, 'dx', 1);
 EasyPlot.moveAxes(ax, 'dy', -2);
 ```
 
-#### Using `set`
+### Using `set`
+
 - To set the properties of multiple axes together, or the margin of the axes, use `EasyPlot.set` instead of MATLAB `set`.
+
 ```matlab
 EasyPlot.set({ax1, ax2, ax3}, 'MarginLeft', 0.8, 'MarginBottom', 0.8);
 ```
 
-#### Truncate axes
+### Truncate axes
+
 - The code are adapted from [here](https://zhuanlan.zhihu.com/p/553375031).
 - To induce a break at the axis and generate two separate axes.
+
 ```matlab
 [ax_new1, ax_new2] = EasyPlot.truncateAxes(ax, 'x', [1,2]); % remove the x data between 1 and 2 from the axes
 ```
 
-### Plotting methods
+## Plotting methods
+
 - All plotting methods are the same as MATLAB, such as `plot`, `scatter`, `histogram`......
 - Do not add `EasyPlot` before the MATLAB plotting methods.
 - Some useful methods are provided by EasyPlot.  
 
-#### scalebar  
+### scalebar  
+
 - Draw X or/and Y scalebars for an axes and allow a wide range of customizations
+
 ```matlab  
 % generate data
 x = 1:100;
@@ -213,10 +267,13 @@ h_scalebars = EasyPlot.scalebar(ax, 'XY',...
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, 'scalebar');
 ```  
+
 ![](./doc/scalebar.png)  
 
-#### significanceLine
+### significanceLine
+
 - creates a line that marks the statistical significance 
+
 ```matlab
 fig = EasyPlot.figure();
 ax = EasyPlot.axes(fig);
@@ -246,10 +303,13 @@ ylim(ax, [0, 1.1]);
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, 'significanceLine');
 ```
+
 ![](./doc/significanceLine.png)
 
-#### plotShaded
+### plotShaded
+
 - Plot a shaded area between two curves.
+
 ```matlab
 fig = EasyPlot.figure();
 ax = EasyPlot.axes(fig, 'Width', 3, 'Height', 3, 'MarginLeft', 0.8);
@@ -260,12 +320,15 @@ EasyPlot.plotShaded(ax, x, [y1;y2]);
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, 'plotShaded');
 ```
+
 ![](./doc/plotShaded.png)
 
-#### boundedLine
-> Adapted from: https://github.com/kakearney/boundedline-pkg  
+### boundedLine
+
+> Adapted from: <https://github.com/kakearney/boundedline-pkg>  
 
 - Plot a line with shaded area. Useful to plot the mean and standard deviation / error bar.
+
 ```matlab
 fig = EasyPlot.figure();
 ax = EasyPlot.axes(fig, 'Width', 3, 'Height', 3, 'MarginLeft', 0.8);
@@ -277,13 +340,16 @@ EasyPlot.boundedLine(ax, x, y, e, 'k-');
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, 'boundedLine');
 ```  
+
 ![](./doc/boundedLine.png)
 
-#### violinplot
-> Bechtold, Bastian, 2016. Violin Plots for Matlab, Github Project  
-> https://github.com/bastibe/Violinplot-Matlab, DOI: 10.5281/zenodo.4559847  
+### violinplot
+
+> Bechtold, Bastian, 2016. Violin Plots for Matlab, Github Project: <https://github.com/bastibe/Violinplot-Matlab>, DOI: 10.5281/zenodo.4559847  
+
 - A violin plot is an easy to read substitute for a box plot that replaces the box shape with a kernel density estimate of the data, and optionally overlays the data points itself.
 - See [here](https://github.com/bastibe/Violinplot-Matlab) for the documentation of violin plot.
+
 ```matlab
 fig = EasyPlot.figure();
 ax = EasyPlot.axes(fig, 'Width', 3, 'Height', 3, 'MarginLeft', 0.5, 'XAxisVisible', 'off');
@@ -293,11 +359,15 @@ EasyPlot.violinplot(ax, x);
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, 'violinplot');
 ```
+
 ![](./doc/violinplot.png)
 
-#### venn
+### venn
+
 > Darik (2025). venn (https://www.mathworks.com/matlabcentral/fileexchange/22282-venn), MATLAB Central File Exchange.  
+
 - Create a Venn diagram.
+
 ```matlab
 fig = EasyPlot.figure();
 ax = EasyPlot.axes(fig, 'Width', 3, 'Height', 3, 'XAxisVisible', 'off', 'YAxisVisible', 'off');
@@ -308,27 +378,75 @@ EasyPlot.venn(ax, [10, 15], 5);
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, 'venn');
 ```  
+
 ![](./doc/venn.png){width=50%, height=50%}  
 
-### Colormaps
+### stairs  
+
+- Create a stairs plot.
+
+```matlab
+fig = EasyPlot.figure();
+ax = EasyPlot.axes(fig, 'Width', 3, 'Height', 3, 'MarginLeft', 0.5);
+
+rng(1);
+x = 1:10;
+y = cumsum(rand(1, 10));
+
+EasyPlot.stairs(ax, x, y, 'k-', 'LineWidth', 1);
+EasyPlot.cropFigure(fig);
+EasyPlot.exportFigure(fig, 'stairs');
+```
+
+![](./doc/stairs.png)
+
+### boxplot
+
+- The same as MATLAB `boxplot` and fix some conflicts with `EasyPlot`.
+
+```matlab
+
+## Colormap and colorbar
+
 - EasyPlot adapts the colormaps from Matplotlib 3.0.  
+
 ```matlab
 cmap = EasyPlot.ColorMap.Diverging.seismic(n); % n is the number of colors
 ```  
+
 - You can check the cheetsheet easily to select the proper colormap.  
+
 ```matlab
 EasyPlot.ColorMap.showCheetSheet();
 ```  
+
 - Sometimes you need to set 0 as the center of the colormap.  
+
 ```matlab
 EasyPlot.colormap(ax, cmap, 'zeroCenter', 'on', 'zeroPosition', 0);
 % Also you can do it when creating a colorbar
 EasyPlot.colorbar(ax, 'colormap', cmap, 'zeroCenter', 'on', 'zeroPosition', 0);
+```  
+
+- If you want to apply the same colormap to multiple axes, remember to set the `clim` of the axes to the same value first.  
+
+```matlab
+% set the same clim for multiple axes
+EasyPlot.setCLim({ax1, ax2}, 'Largest'); % set the clim to the largest value of all the axes
+
+% set the same colormap for multiple axes
+EasyPlot.colormap({ax1, ax2}, cmap);
+
+% set the colorbar at the second axes
+EasyPlot.colorbar(ax2);
 ```
 
-### Default settings  
+## Default settings  
+
 - Scientific figures have different requirements from other figures.
+
 - The default values are defined in `EasyPlot.DefaultValue` class. Modify it if you have different preferences.  
+
 ```matlab
 % General
 Units = 'centimeters';
@@ -371,9 +489,10 @@ ExportFormattype = 'png';
 ExportDPI = 1200;
 ```
 
-### Export
-- EasyPlot provides a convenient method to export figures with various formats and DPIs.    
+## Export
+
+- EasyPlot provides a convenient method to export figures with various formats and DPIs.  
+
 ```matlab  
 EasyPlot.exportFigure(fig, filename, 'type', 'png', 'dpi', 600);
 ```
-

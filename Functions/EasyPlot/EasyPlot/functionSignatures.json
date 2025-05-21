@@ -11,7 +11,14 @@
          {"name":"MarginLeft", "kind":"namevalue", "type":"numeric"},
          {"name":"MarginRight", "kind":"namevalue", "type":"numeric"},
          {"name":"MarginTop", "kind":"namevalue", "type":"numeric"},
-         {"name":"MarginBottom", "kind":"namevalue", "type":"numeric"}
+         {"name":"MarginBottom", "kind":"namevalue", "type":"numeric"},
+         {"name":"Visible", "kind":"namevalue", "type":"choices={'on','off'}"},
+         {"name":"Color", "kind":"namevalue", "type":"char"},
+         {"name":"Units", "kind":"namevalue", "type":"choices={'centimeters','normalized','inches','pixels','points','characters'}"},
+         {"name":"PaperPositionMode", "kind":"namevalue", "type":"choices={'auto','manual'}"},
+         {"name":"PaperPosition", "kind":"namevalue", "type":"numeric"},
+         {"name":"PaperSize", "kind":"namevalue", "type":"numeric"},
+         {"name":"PaperOrientation", "kind":"namevalue", "type":"choices={'portrait','landscape'}"}
       ]
    },
 
@@ -104,7 +111,12 @@
          {"name":"Interpreter", "kind":"namevalue", "type":"choices={'tex','latex','none'}"},
          {"name":"FitBoxToText", "kind":"namevalue", "type":"choices={'on','off'}"},
          {"name":"Rotation", "kind":"namevalue", "type":"numeric"},
-         {"name":"EdgeAlpha", "kind":"namevalue", "type":"numeric"}
+         {"name":"EdgeAlpha", "kind":"namevalue", "type":"numeric"},
+         {"name":"HeadLength", "kind":"namevalue", "type":"numeric"},
+         {"name":"HeadWidth", "kind":"namevalue", "type":"numeric"},
+         {"name":"HeadStyle", "kind":"namevalue", "type":"choices={'plain','vback2','vback1','vback3', 'ellipse', 'cback1', 'cback2', 'cback3', 'none', 'fourstar', 'rectangle', 'diamond', 'rose', 'hypocycloid', 'astroid', 'deltoid'}"},
+         {"name":"LineWidth", "kind":"namevalue", "type":"numeric"},
+         {"name":"LineStyle", "kind":"namevalue", "type":"char"}
       ]
    },  
 
@@ -849,12 +861,12 @@
          {"name":"EdgeColor", "kind":"namevalue", "type":"numeric"},
          {"name":"BoxColor", "kind":"namevalue", "type":"numeric"},
          {"name":"MedianColor", "kind":"namevalue", "type":"numeric"},
-         {"name":"ShowData", "kind":"namevalue", "type":"numeric"},
-         {"name":"ShowNotches", "kind":"namevalue", "type":"numeric"},
-         {"name":"ShowMean", "kind":"namevalue", "type":"numeric"},
-         {"name":"ShowBox", "kind":"namevalue", "type":"numeric"},
-         {"name":"ShowMedian", "kind":"namevalue", "type":"numeric"},
-         {"name":"ShowWhiskers", "kind":"namevalue", "type":"numeric"},
+         {"name":"ShowData", "kind":"namevalue"},
+         {"name":"ShowNotches", "kind":"namevalue"},
+         {"name":"ShowMean", "kind":"namevalue"},
+         {"name":"ShowBox", "kind":"namevalue"},
+         {"name":"ShowMedian", "kind":"namevalue"},
+         {"name":"ShowWhiskers", "kind":"namevalue"},
          {"name":"GroupOrder", "kind":"namevalue", "type":"cell"},
          {"name":"HalfViolin", "kind":"namevalue", "type":"choices={'left','right','full'}"},
          {"name":"QuartileStyle", "kind":"namevalue", "type":"choices={'shadow','boxplot','none'}"},
