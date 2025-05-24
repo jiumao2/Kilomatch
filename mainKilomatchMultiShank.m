@@ -169,6 +169,7 @@ for i_shank = 1:length(shankIDs)
     Output.Motion = [Output.Motion; data.Output.Motion];
 
     Output.RunTime = data.Output.RunTime; % save the run time of the final shank
+    Output.DateTime = datestr(datetime('now'));
     
     % update waveforms
     waveforms_corrected(idx_units,:,:,:) = data_waveforms.waveforms_corrected;

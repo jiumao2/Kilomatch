@@ -29,6 +29,7 @@ Output.Sessions = sessions;
 Output.SessionNames = {spikeInfo.Session};
 Output.Motion = motion;
 Output.RunTime = toc;
+Output.DateTime = datestr(datetime('now'));
 
 save(fullfile(user_settings.output_folder, 'Output.mat'), 'Output', '-nocompression');
 fprintf('Kilomatch done! Output is saved to %s!\n', fullfile(user_settings.output_folder, 'Output.mat'));
