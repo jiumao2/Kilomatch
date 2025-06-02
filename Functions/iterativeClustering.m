@@ -90,13 +90,7 @@ if nargout >= 6
     % set the threshold based on LDA results
     thres = mdl.Coeffs(1,2).Const ./ (-mdl.Coeffs(1,2).Linear(1)) .* weights(1);
 
-    similarity = sum(similarity_all.*weights, 2);
-    good_matches_matrix = zeros(size(similarity_matrix), 'logical');
-    idx_good_matches = find(similarity > thres);
-    for k = 1:length(idx_good_matches)
-        good_matches_matrix(idx_unit_pairs(idx_good_matches(k), 1), idx_unit_pairs(idx_good_matches(k), 2)) = 1;
-        good_matches_matrix(idx_unit_pairs(idx_good_matches(k), 2), idx_unit_pairs(idx_good_matches(k), 1)) = 1;
-    end
+    good_matches_matrix = similarity_matrix > thres;
     good_matches_matrix(eye(size(good_matches_matrix)) == 1) = 1;
 end
 
