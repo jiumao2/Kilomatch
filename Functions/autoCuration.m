@@ -11,28 +11,6 @@ fprintf('%d clusters and %d pairs before removing bad units!\n',...
 
 hdbscan_matrix_raw = hdbscan_matrix;
 
-% split a cluster if there is a clear boundary in good_matches_matrix
-if user_settings.autoCuration.auto_split
-    n_cluster_new = n_cluster;
-    for k = 1:n_cluster
-        units = find(idx_cluster_hdbscan == k);
-        graph_this = graph(good_matches_matrix(units, units));
-        idx_sub_clusters = conncomp(graph_this);
-    
-        n_sub_clusters = max(idx_sub_clusters);
-        if n_sub_clusters <= 1
-            continue
-        end
-        for j = 2:n_sub_clusters
-            units_this = units(idx_sub_clusters == j);
-            idx_cluster_hdbscan(units_this) = n_cluster_new+j-1;
-        end
-    
-        n_cluster_new = n_cluster_new + n_sub_clusters - 1;
-    end
-    n_cluster = n_cluster_new;
-end
-
 % remove bad units in the cluster if two or more units are originated from the same sessions 
 % or any similarity < reject_thres
 for k = 1:n_cluster
@@ -64,6 +42,28 @@ for k = 1:n_cluster
         similarity_matrix_this(idx_remove, :) = [];
         similarity_matrix_this(:, idx_remove) = [];
     end
+end
+
+% split a cluster if there is a clear boundary in good_matches_matrix
+if user_settings.autoCuration.auto_split
+    n_cluster_new = n_cluster;
+    for k = 1:n_cluster
+        units = find(idx_cluster_hdbscan == k);
+        graph_this = graph(good_matches_matrix(units, units));
+        idx_sub_clusters = conncomp(graph_this);
+    
+        n_sub_clusters = max(idx_sub_clusters);
+        if n_sub_clusters <= 1
+            continue
+        end
+        for j = 2:n_sub_clusters
+            units_this = units(idx_sub_clusters == j);
+            idx_cluster_hdbscan(units_this) = n_cluster_new+j-1;
+        end
+    
+        n_cluster_new = n_cluster_new + n_sub_clusters - 1;
+    end
+    n_cluster = n_cluster_new;
 end
 
 % update the clusters and hdbscan matrix
