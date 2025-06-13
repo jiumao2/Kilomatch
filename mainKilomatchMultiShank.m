@@ -24,11 +24,11 @@ shankIDs = unique(spikeInfo(1).Kcoords);
 % run Kilomatch in each shank individually
 for i_shank = 1:length(shankIDs)
     % reload the data and only consider the current shank
-    load(fullfile(output_folder, 'spikeInfo.mat'));
     shankID = shankIDs(i_shank);
-    spikeInfo = spikeInfo(shanks_data == shankID);
+    idx_units = find(shanks_data == shankID);
+    spikeInfoShank = spikeInfo(idx_units);
     
-    % set the new output folders
+    % set the new output folders for each shank
     user_settings.output_folder = fullfile(output_folder, ['Shank', num2str(shankID)]);
     if ~exist(fullfile(user_settings.output_folder), 'dir')
         mkdir(fullfile(user_settings.output_folder));
@@ -38,11 +38,11 @@ for i_shank = 1:length(shankIDs)
     end
 
     % get necessary information
-    sessions = [spikeInfo.SessionIndex];
-    channel_locations = [spikeInfo(1).Xcoords, spikeInfo(1).Ycoords];
-    locations = cat(1, spikeInfo.Location);
-    [ISI_features, AutoCorr_features, PETH_features] = getAllFeatures(user_settings, spikeInfo);
-    waveforms_all = cat(3, spikeInfo.Waveform);
+    sessions = [spikeInfoShank.SessionIndex];
+    channel_locations = [spikeInfoShank(1).Xcoords, spikeInfoShank(1).Ycoords];
+    locations = cat(1, spikeInfoShank.Location);
+    [ISI_features, AutoCorr_features, PETH_features] = getAllFeatures(user_settings, spikeInfoShank);
+    waveforms_all = cat(3, spikeInfoShank.Waveform);
     waveforms_all = permute(waveforms_all, [3,1,2]);
     
     % motion estimation
@@ -98,21 +98,22 @@ for i_shank = 1:length(shankIDs)
         sessions, similarity_matrix, leafOrder);
     
     % save the final output
-    Output = saveToOutput(user_settings, spikeInfo,...
+    Output = saveToOutput(user_settings, spikeInfoShank,...
         idx_cluster_hdbscan_curated, hdbscan_matrix_curated, locations, leafOrder, ...
         similarity_matrix, similarity_all, idx_unit_pairs, feature_names, weights, thres, good_matches_matrix,...
-        sessions, motion);
+        sessions, motion, idx_units);
     
     % plot the result
     overviewResults(user_settings, Output);
 end
 
 % Combine the Output
-load(fullfile(output_folder, 'spikeInfo.mat'));
 n_session = max([spikeInfo.SessionIndex]);
 
 % Create an empty Output
 Output = struct(...
+    'IdxUnit', 1:length(spikeInfo),...
+    'IdxShank', shanks_data,...
     'NumClusters', 0,...
     'NumUnits', length(spikeInfo),...
     'Locations', zeros(length(spikeInfo), 3),...
@@ -131,7 +132,9 @@ Output = struct(...
     'NumSession', n_session,...
     'Sessions', zeros(1, length(spikeInfo)),...
     'SessionNames', cell(1, length(spikeInfo)),...
-    'Motion', []);
+    'Motion', [],...
+    'RunTime', [],...
+    'DateTime', []);
 
 waveforms_corrected = zeros(length(spikeInfo), size(spikeInfo(1).Waveform, 1), size(spikeInfo(1).Waveform, 2), user_settings.waveformCorrection.n_templates);
 

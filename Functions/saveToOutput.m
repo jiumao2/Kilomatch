@@ -1,7 +1,7 @@
 function Output = saveToOutput(user_settings, spikeInfo,...
     idx_clusters, cluster_matrix, locations, leafOrder, ...
     similarity_matrix, similarity_all, idx_unit_pairs, similarity_names, weights, thres, good_matches_matrix,...
-    sessions, motion)
+    sessions, motion, idx_units)
 
 % get matched_pairs
 [idx_row, idx_col] = ind2sub(size(cluster_matrix), find(cluster_matrix == 1));
@@ -11,6 +11,7 @@ matched_pairs = [idx_row(idx_good), idx_col(idx_good)];
 Output = struct();
 Output.NumClusters = max(idx_clusters);
 Output.NumUnits = length(idx_clusters);
+Output.IdxUnit = idx_units;
 Output.Locations = locations; % NumUnits x 3;
 Output.IdxSort = leafOrder;
 Output.IdxCluster = idx_clusters;
