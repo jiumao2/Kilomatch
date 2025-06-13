@@ -150,7 +150,9 @@ elseif iscell(data) && length(data(:))==2 % cell input
     end
 elseif iscell(data) && length(data(:))>2 % cell input
     error('Up to two datasets can be compared');
-elseif isnumeric(data) % numeric input   
+elseif isnumeric(data) % numeric input  
+    % ensure the shape is n x 1
+    data = data(:);
     % 1D data, one category for each data point
     if hascategories && numel(data) == numel(cats)    
         if isempty(grouporder)

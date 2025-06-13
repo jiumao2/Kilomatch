@@ -67,7 +67,7 @@ function handle_all = scalebar(ax, type, varargin)
 %
 
 color = 'k';
-lineWidth = 2;
+lineWidth = 1;
 fontWeight = 'normal';
 fontSize = EasyPlot.DefaultValue.FontSize;
 fontName = EasyPlot.DefaultValue.FontName;

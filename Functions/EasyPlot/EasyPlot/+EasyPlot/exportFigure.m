@@ -2,7 +2,7 @@ function img = exportFigure(fig, filename, varargin)
     type = EasyPlot.DefaultValue.ExportFormattype;
     dpi = EasyPlot.DefaultValue.ExportDPI;
     figColor = [1,1,1];
-    print_renderer = 'painters';
+    print_renderer = []; % painters or opengl
     printer = []; % print or exportgraphics
     if nargin > 2
         for k = 1:2:size(varargin,2)
@@ -46,6 +46,14 @@ function img = exportFigure(fig, filename, varargin)
             printer = 'exportgraphics';
         else
             printer = 'print';
+        end
+    end
+
+    if isempty(print_renderer)
+        if strcmpi(type, 'pdf')
+            print_renderer = 'opengl';
+        else
+            print_renderer = 'painters';
         end
     end
 
