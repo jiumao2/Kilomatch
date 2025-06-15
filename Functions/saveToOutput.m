@@ -1,7 +1,8 @@
 function Output = saveToOutput(user_settings, spikeInfo,...
     idx_clusters, cluster_matrix, locations, leafOrder, ...
     similarity_matrix, similarity_all, idx_unit_pairs, similarity_names, weights, thres, good_matches_matrix,...
-    sessions, motion, idx_units)
+    sessions, motion, idx_units,...
+    curation_pairs, curation_types, curation_type_names)
 
 % get matched_pairs
 [idx_row, idx_col] = ind2sub(size(cluster_matrix), find(cluster_matrix == 1));
@@ -24,6 +25,11 @@ Output.SimilarityThreshold = thres;
 Output.GoodMatchesMatrix = good_matches_matrix;
 Output.ClusterMatrix = cluster_matrix;
 Output.MatchedPairs = matched_pairs;
+
+Output.CurationPairs = curation_pairs;
+Output.CurationTypes = curation_types;
+Output.CurationTypeNames = curation_type_names;
+
 Output.Params = user_settings;
 Output.NumSession = max(sessions);
 Output.Sessions = sessions;

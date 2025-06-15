@@ -1,8 +1,11 @@
-function [hdbscan_matrix_curated, idx_cluster_hdbscan_curated] = autoCuration(...
+function [hdbscan_matrix_curated, idx_cluster_hdbscan_curated, curation_pairs, curation_types, curation_type_names] = autoCuration(...
     user_settings, hdbscan_matrix, idx_cluster_hdbscan, good_matches_matrix, ...
     sessions, similarity_matrix, leafOrder)
 
-reject_thres = user_settings.autoCuration.reject_threshold; 
+curation_type_names = {'Removal_SameSession', 'Removal_LowSimilarity', 'Merge_Cluster', 'Merge_Unit'};
+curation_pairs = [];
+curation_types = [];
+
 n_unit = size(similarity_matrix, 1);
 
 n_cluster = max(idx_cluster_hdbscan);
@@ -18,12 +21,11 @@ for k = 1:n_cluster
     sessions_this = sessions(units);
     similarity_matrix_this = similarity_matrix(units, units);
 
-    while length(sessions_this) ~= length(unique(sessions_this))...
-            || any(similarity_matrix_this<reject_thres, 'all')
+    while length(sessions_this) ~= length(unique(sessions_this))
         idx_remove = [];
         for j = 1:length(sessions_this)
             for i = j+1:length(sessions_this)
-                if sessions_this(i) == sessions_this(j) || similarity_matrix_this(i,j)<reject_thres
+                if sessions_this(i) == sessions_this(j)
                     similarity_i = mean(similarity_matrix_this(i,:), 'all');
                     similarity_j = mean(similarity_matrix_this(j,:), 'all');
 
@@ -33,6 +35,20 @@ for k = 1:n_cluster
                         idx_remove = [idx_remove, j];
                     end
                 end
+            end
+        end
+
+        % update curation pairs
+        for j = 1:length(idx_remove)
+            unit1 = units(idx_remove(j));
+            for i = 1:length(units)
+                if any(idx_remove(1:j) == i)
+                    continue
+                end
+                unit2 = units(i);
+                pair_this = sort([unit1, unit2]);
+                curation_pairs = [curation_pairs; pair_this];
+                curation_types = [curation_types, 1];
             end
         end
 
@@ -56,9 +72,24 @@ if user_settings.autoCuration.auto_split
         if n_sub_clusters <= 1
             continue
         end
+
         for j = 2:n_sub_clusters
             units_this = units(idx_sub_clusters == j);
             idx_cluster_hdbscan(units_this) = n_cluster_new+j-1;
+
+            % update curation pairs
+            for i = 1:length(units_this)
+                unit1 = units_this(i);
+                for ii = 1:length(units)
+                    if any(units_this == units(ii))
+                        continue
+                    end
+                    unit2 = units(ii);
+                    pair_this = sort([unit1, unit2]);
+                    curation_pairs = [curation_pairs; pair_this];
+                    curation_types = [curation_types, 2];
+                end
+            end
         end
     
         n_cluster_new = n_cluster_new + n_sub_clusters - 1;
@@ -132,10 +163,6 @@ if user_settings.autoCuration.auto_merge
             if ~isempty(intersect(sessions_this, sessions_next))
                 continue
             end
-            
-            if any(similarity_matrix(units, units_next) < reject_thres, 'all')
-                continue
-            end
     
             if ~any(good_matches_matrix(units, units_next) > 0, 'all')
                 continue
@@ -145,15 +172,11 @@ if user_settings.autoCuration.auto_merge
         end
         
         if ~isempty(similar_pairs)
-            fprintf('Found %d possible merges!\n', sum(similar_pairs(:,3) > reject_thres));
+            fprintf('Found %d possible merges!\n', size(similar_pairs, 1));
         end
     
         % merging
         for k = 1:size(similar_pairs, 1)
-            if similar_pairs(k,3) <= reject_thres
-                continue
-            end
-    
             if k < size(similar_pairs, 1) &&...
                     similar_pairs(k+1, 1) == similar_pairs(k,2) &&...
                     similar_pairs(k+1, 3) > similar_pairs(k,3)
@@ -161,9 +184,21 @@ if user_settings.autoCuration.auto_merge
             end
             
             flag = true;
-    
+            
             id = cluster_id_sorted(similar_pairs(k,1));
             id_next = cluster_id_sorted(similar_pairs(k,2));
+
+            % update curation pairs
+            units1 = find(idx_cluster_hdbscan == id);
+            units2 = find(idx_cluster_hdbscan == id_next);
+            for j = 1:length(units1)
+                for i = 1:length(units2)
+                    pair_this = sort([units1(j), units2(i)]);
+                    curation_pairs = [curation_pairs; pair_this];
+                    curation_types = [curation_types, 3];
+                end
+            end
+
             idx_cluster_hdbscan(idx_cluster_hdbscan == id_next) = id;
         end
     
@@ -243,6 +278,15 @@ if user_settings.autoCuration.auto_merge
             
             flag_match = true;
             count_merges = count_merges+1;
+
+            % update curation pairs
+            units1 = find(idx_cluster_hdbscan == idx_cluster_new);
+            for j = 1:length(units1)
+                pair_this = sort([units1(j), unit]);
+                curation_pairs = [curation_pairs; pair_this];
+                curation_types = [curation_types, 4];
+            end
+
             idx_cluster_hdbscan(unit) = idx_cluster_new;
         end
     end

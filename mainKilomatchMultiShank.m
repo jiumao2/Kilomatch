@@ -15,7 +15,7 @@ tic;
 fprintf('Loading %s...\n', path_to_data);
 load(path_to_data);
 
-spikeInfo = preprocessSpikeInfo(user_settings, spikeInfo);
+% spikeInfo = preprocessSpikeInfo(user_settings, spikeInfo);
 
 % read the shank ID of each unit
 shanks_data = arrayfun(@(x)x.Kcoords(x.Channel), spikeInfo);
@@ -93,7 +93,7 @@ for i_shank = 1:length(shankIDs)
         iterativeClustering(user_settings, path_kilomatch, similarity_matrix_all(:,:,idx_features), feature_names, idx_unit_pairs, sessions);
     
     % Auto-curate the result
-    [hdbscan_matrix_curated, idx_cluster_hdbscan_curated] = autoCuration(...
+    [hdbscan_matrix_curated, idx_cluster_hdbscan_curated, curation_pairs, curation_types, curation_type_names] = autoCuration(...
         user_settings, hdbscan_matrix, idx_cluster_hdbscan, good_matches_matrix, ...
         sessions, similarity_matrix, leafOrder);
     
@@ -101,91 +101,13 @@ for i_shank = 1:length(shankIDs)
     Output = saveToOutput(user_settings, spikeInfoShank,...
         idx_cluster_hdbscan_curated, hdbscan_matrix_curated, locations, leafOrder, ...
         similarity_matrix, similarity_all, idx_unit_pairs, feature_names, weights, thres, good_matches_matrix,...
-        sessions, motion, idx_units);
+        sessions, motion, idx_units,...
+        curation_pairs, curation_types, curation_type_names);
     
     % plot the result
     overviewResults(user_settings, Output);
 end
 
 % Combine the Output
-n_session = max([spikeInfo.SessionIndex]);
-
-% Create an empty Output
-Output = struct(...
-    'IdxUnit', 1:length(spikeInfo),...
-    'IdxShank', shanks_data,...
-    'NumClusters', 0,...
-    'NumUnits', length(spikeInfo),...
-    'Locations', zeros(length(spikeInfo), 3),...
-    'IdxSort', zeros(1, length(spikeInfo)),...
-    'IdxCluster', zeros(length(spikeInfo), 1),...
-    'SimilarityMatrix', zeros(length(spikeInfo)),...
-    'SimilarityAll', [],...
-    'SimilarityPairs', [],...
-    'SimilarityNames', {user_settings.clustering.features'},...
-    'SimilarityWeights', [],...
-    'SimilarityThreshold', [],...
-    'GoodMatchesMatrix', zeros(length(spikeInfo)),...
-    'ClusterMatrix', zeros(length(spikeInfo)),...
-    'MatchedPairs', [],...
-    'Params', user_settings,...
-    'NumSession', n_session,...
-    'Sessions', zeros(1, length(spikeInfo)),...
-    'SessionNames', cell(1, length(spikeInfo)),...
-    'Motion', [],...
-    'RunTime', [],...
-    'DateTime', []);
-
-waveforms_corrected = zeros(length(spikeInfo), size(spikeInfo(1).Waveform, 1), size(spikeInfo(1).Waveform, 2), user_settings.waveformCorrection.n_templates);
-
-n_cluster = 0;
-n_units = 0;
-for i_shank = 1:length(shankIDs)
-    shankID = shankIDs(i_shank);
-
-    fprintf('Loading Output from shank %d ...\n', shankID);
-    data = load(fullfile(output_folder, ['Shank', num2str(shankID)], 'Output.mat'));
-    data_waveforms = load(fullfile(output_folder, ['Shank', num2str(shankID)], 'Waveforms.mat'));
-    idx_units = find(shanks_data == shankID);
-
-    Output.Locations(idx_units, :) = data.Output.Locations;
-    Output.IdxSort(idx_units) = data.Output.IdxSort + n_cluster;
-
-    Output.IdxCluster(idx_units) = data.Output.IdxCluster + n_cluster;
-    Output.IdxCluster(idx_units(data.Output.IdxCluster == -1)) = -1;
-    Output.SimilarityMatrix(idx_units, idx_units) = data.Output.SimilarityMatrix;
-    Output.SimilarityAll = [Output.SimilarityAll; data.Output.SimilarityAll];
-
-    similarity_pairs = arrayfun(@(x)idx_units(x), data.Output.SimilarityPairs);
-    Output.SimilarityPairs = [Output.SimilarityPairs; similarity_pairs];
-
-    Output.SimilarityWeights = [Output.SimilarityWeights; data.Output.SimilarityWeights];
-    Output.SimilarityThreshold = [Output.SimilarityThreshold; data.Output.SimilarityThreshold];
-    Output.GoodMatchesMatrix(idx_units, idx_units) = data.Output.GoodMatchesMatrix;
-    Output.ClusterMatrix(idx_units, idx_units) = data.Output.ClusterMatrix;
-
-    matched_pairs = arrayfun(@(x)idx_units(x), data.Output.MatchedPairs);
-    Output.MatchedPairs = [Output.MatchedPairs; matched_pairs];
-
-    Output.Sessions(idx_units) = data.Output.Sessions;
-    Output.SessionNames(idx_units) = data.Output.SessionNames;
-    Output.Motion = [Output.Motion; data.Output.Motion];
-
-    Output.RunTime = data.Output.RunTime; % save the run time of the final shank
-    Output.DateTime = datestr(datetime('now'));
-    
-    % update waveforms
-    waveforms_corrected(idx_units,:,:,:) = data_waveforms.waveforms_corrected;
-
-    n_cluster = n_cluster + data.Output.NumClusters;
-end
-
-Output.NumClusters = n_cluster;
-
-% Save the combined output
-fprintf('Saving Output to %s ...\n', fullfile(output_folder, 'Output.mat'));
-save(fullfile(output_folder, 'Output.mat'), 'Output', '-nocompression');
-save(fullfile(output_folder, 'Waveforms.mat'), 'waveforms_corrected', '-nocompression');
-
-
+Output = mergeOutput(user_settings, spikeInfo, shanks_data, output_folder);
 
