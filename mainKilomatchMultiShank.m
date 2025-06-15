@@ -49,6 +49,8 @@ for i_shank = 1:length(shankIDs)
     features_all_motion_estimation = user_settings.motionEstimation.features;
     n_iter_motion_estimation = length(features_all_motion_estimation);
     motion = zeros(1, max(sessions)); % initialize the motion to zeros
+
+    resultIter = struct();
     for i_iter = 1:n_iter_motion_estimation
         % find nearby pairs
         max_distance = user_settings.motionEstimation.max_distance;
@@ -66,16 +68,25 @@ for i_shank = 1:length(shankIDs)
     
         % iterative HDBSCAN
         idx_features = cellfun(@(x)find(strcmpi(feature_names_all, x)), feature_names);
-        [hdbscan_matrix, ~, similarity_matrix, ~, ~, similarity_thres] = ...
+        [hdbscan_matrix, idx_cluster_hdbscan, similarity_matrix, ~, weights, similarity_thres] = ...
             iterativeClustering(user_settings, path_kilomatch, similarity_matrix_all(:,:,idx_features), feature_names, idx_unit_pairs, sessions);
         
         % compute drift
         motion = computeMotion(user_settings, similarity_matrix, hdbscan_matrix, ...
             idx_unit_pairs, similarity_thres, sessions, locations);
+
+        % save the result from this iteration
+        resultIter(i_iter).FeatureNames = feature_names;
+        resultIter(i_iter).Weights = weights;
+        resultIter(i_iter).IdxClusters = idx_cluster_hdbscan;
+        resultIter(i_iter).Motion = motion;
     
         % compute corrected waveforms and save to Waveforms.mat
         waveforms_corrected = computeCorrectedWaveforms(user_settings, waveforms_all, channel_locations, sessions, locations, motion);
     end
+
+    % save the intermediate result
+    save(fullfile(user_settings.output_folder, 'resultIter.mat'), 'resultIter', '-nocompression');
     
     % final clustering
     % find nearby pairs
@@ -92,7 +103,7 @@ for i_shank = 1:length(shankIDs)
     [hdbscan_matrix, idx_cluster_hdbscan, similarity_matrix, similarity_all, weights, thres, good_matches_matrix, leafOrder] = ...
         iterativeClustering(user_settings, path_kilomatch, similarity_matrix_all(:,:,idx_features), feature_names, idx_unit_pairs, sessions);
     
-    % Auto-curate the result
+    % auto-curate the result
     [hdbscan_matrix_curated, idx_cluster_hdbscan_curated, curation_pairs, curation_types, curation_type_names] = autoCuration(...
         user_settings, hdbscan_matrix, idx_cluster_hdbscan, good_matches_matrix, ...
         sessions, similarity_matrix, leafOrder);
