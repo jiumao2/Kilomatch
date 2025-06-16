@@ -1,4 +1,8 @@
 function [nSame, nA, nB] = graphEditNumber(matA, matB)
+    if nargin < 2
+        matB = matA;
+    end
+
     GA = graph(matA);
     GB = graph(matB);
     GAB = graph(matA & matB);
