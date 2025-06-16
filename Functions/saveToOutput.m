@@ -1,7 +1,7 @@
 function Output = saveToOutput(user_settings, spikeInfo,...
     idx_clusters, cluster_matrix, locations, leafOrder, ...
     similarity_matrix, similarity_all, idx_unit_pairs, similarity_names, weights, thres, good_matches_matrix,...
-    sessions, motion, idx_units,...
+    sessions, Motion, idx_units,...
     curation_pairs, curation_types, curation_type_names)
 
 % get matched_pairs
@@ -34,7 +34,7 @@ Output.Params = user_settings;
 Output.NumSession = max(sessions);
 Output.Sessions = sessions;
 Output.SessionNames = {spikeInfo.Session};
-Output.Motion = motion;
+Output.Motion = Motion;
 Output.RunTime = toc;
 Output.DateTime = datestr(datetime('now'));
 

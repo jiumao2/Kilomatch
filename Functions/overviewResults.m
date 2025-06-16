@@ -55,7 +55,7 @@ xlim(ax_session, [0.5, n_session+0.5]);
 xlabel(ax_session, 'Sessions');
 
 % Motion
-probe_positions = median(Output.Motion, 1);
+probe_positions = median(Output.Motion.LinearScale*Output.Motion.Linear*mean(locations(:,2)) + Output.Motion.Constant, 1);
 
 x_plot = [];
 y_plot = [];
