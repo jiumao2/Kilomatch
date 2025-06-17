@@ -1,10 +1,13 @@
-function [hdbscan_matrix_curated, idx_cluster_hdbscan_curated, curation_pairs, curation_types, curation_type_names] = autoCuration(...
+function [hdbscan_matrix_curated, idx_cluster_hdbscan_curated,...
+    curation_pairs, curation_types, curation_type_names, num_removal, num_merge] = autoCuration(...
     user_settings, hdbscan_matrix, idx_cluster_hdbscan, good_matches_matrix, ...
     sessions, similarity_matrix, leafOrder)
 
 curation_type_names = {'Removal_SameSession', 'Removal_LowSimilarity', 'Merge_Cluster', 'Merge_Unit'};
 curation_pairs = [];
 curation_types = [];
+num_removal = 0;
+num_merge = 0;
 
 n_unit = size(similarity_matrix, 1);
 
@@ -132,7 +135,8 @@ hdbscan_matrix(eye(n_unit) == 1) = 1;
 [num_same, num_before, num_after] = graphEditNumber(hdbscan_matrix_raw, hdbscan_matrix);
 assert(num_same == num_after);
 
-fprintf('%d deleting steps are done!\n', num_before-num_after);
+num_removal = num_before-num_after;
+fprintf('%d deleting steps are done!\n', num_removal);
 fprintf('%d clusters and %d pairs after removing bad units!\n',...
     n_cluster, (sum(hdbscan_matrix(:)) - n_unit)/2);
 
@@ -240,7 +244,8 @@ if user_settings.autoCuration.auto_merge
     [num_same, num_before, num_after] = graphEditNumber(hdbscan_matrix_raw, hdbscan_matrix);
     assert(num_same == num_before);
     
-    fprintf('%d merging steps are done!\n', -num_before+num_after);
+    num_merge = num_after - num_before;
+    fprintf('%d merging steps are done!\n', num_merge);
     fprintf('%d clusters and %d pairs after merging good clusters!\n',...
         n_cluster, (sum(hdbscan_matrix(:)) - n_unit)/2);
     
@@ -278,6 +283,7 @@ if user_settings.autoCuration.auto_merge
             
             flag_match = true;
             count_merges = count_merges+1;
+            num_merge = num_merge+1;
 
             % update curation pairs
             units1 = find(idx_cluster_hdbscan == idx_cluster_new);
