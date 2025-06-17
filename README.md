@@ -1,10 +1,13 @@
 # Kilomatch
 
 [![View Kilomatch on GitHub](https://img.shields.io/badge/GitHub-Kilomatch-blue.svg)](https://github.com/jiumao2/Kilomatch)
+[![Documentation Status](https://app.readthedocs.org/projects/kilomatch/badge/)](https://kilomatch.readthedocs.io/en/latest/)
 
 A MATLAB toolbox for tracking the neurons across days.
 
-Check out the Python version of Kilomatch [here](https://github.com/jiumao2/pyKilomatch)!
+Check out the Python version of Kilomatch [here](https://github.com/jiumao2/pyKilomatch)!  
+
+See the [documentation](https://kilomatch.readthedocs.io/en/latest/) for more details.
 
 ## Installation
 
