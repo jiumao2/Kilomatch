@@ -31,13 +31,13 @@ for i_template = 1:n_templates
             continue
         end
     
-        waveform_this = reshape(waveforms_all(:, idx_nearest_unique(k,:), :, i_template), n_unit, []);
-    
-        temp = corrcoef(waveform_this');
+        waveform_this = reshape(waveforms_all(:, idx_nearest_unique(k,:), :, i_template), n_unit, [])';
+
+        temp = corr(waveform_this(:, idx_units), waveform_this);
         temp(isnan(temp)) = 0;
         temp = atanh(temp);
         
-        waveform_similarity_matrix_this(idx_units,:) = temp(idx_units,:);
+        waveform_similarity_matrix_this(idx_units,:) = temp;
     
         progBar([], [], []);
     end
