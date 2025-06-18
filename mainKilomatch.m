@@ -26,13 +26,13 @@ waveforms_all = permute(waveforms_all, [3,1,2]);
 % motion estimation
 features_all_motion_estimation = user_settings.motionEstimation.features;
 n_iter_motion_estimation = length(features_all_motion_estimation);
-motion = zeros(1, max(sessions)); % initialize the motion to zeros
+Motion = []; % initialize the motion to zeros
 
 resultIter = struct();
 for i_iter = 1:n_iter_motion_estimation
     % find nearby pairs
     max_distance = user_settings.motionEstimation.max_distance;
-    idx_unit_pairs = getNearbyPairs(max_distance, sessions, locations, motion);
+    idx_unit_pairs = getNearbyPairs(max_distance, sessions, locations, Motion);
     
     % compute similarity matrix 
     feature_names = features_all_motion_estimation{i_iter}';
@@ -50,17 +50,16 @@ for i_iter = 1:n_iter_motion_estimation
         iterativeClustering(user_settings, path_kilomatch, similarity_matrix_all(:,:,idx_features), feature_names, idx_unit_pairs, sessions);
     
     % compute drift
-    motion = computeMotion(user_settings, similarity_matrix, hdbscan_matrix, ...
-        idx_unit_pairs, similarity_thres, sessions, locations);
+    Motion = computeMotion(user_settings, similarity_matrix, hdbscan_matrix, idx_unit_pairs, similarity_thres, sessions, locations);
 
     % save the result from this iteration
     resultIter(i_iter).FeatureNames = feature_names;
     resultIter(i_iter).Weights = weights;
     resultIter(i_iter).IdxClusters = idx_cluster_hdbscan;
-    resultIter(i_iter).Motion = motion;
+    resultIter(i_iter).Motion = Motion;
 
     % compute corrected waveforms and save to Waveforms.mat
-    waveforms_corrected = computeCorrectedWaveforms(user_settings, waveforms_all, channel_locations, sessions, locations, motion);
+    waveforms_corrected = computeCorrectedWaveforms(user_settings, waveforms_all, channel_locations, sessions, locations, Motion);
 end
 
 % save the intermediate result
@@ -69,7 +68,7 @@ save(fullfile(user_settings.output_folder, 'resultIter.mat'), 'resultIter', '-no
 % final clustering
 % find nearby pairs
 max_distance = user_settings.clustering.max_distance;
-idx_unit_pairs = getNearbyPairs(max_distance, sessions, locations, motion);
+idx_unit_pairs = getNearbyPairs(max_distance, sessions, locations, Motion);
 
 % compute similarity matrix
 [similarity_matrix_all, feature_names_all] = computeAllSimilarityMatrix( ...
@@ -91,7 +90,7 @@ idx_features = cellfun(@(x)find(strcmpi(feature_names_all, x)), feature_names);
 Output = saveToOutput(user_settings, spikeInfo,...
     idx_cluster_hdbscan_curated, hdbscan_matrix_curated, locations, leafOrder, ...
     similarity_matrix, similarity_all, idx_unit_pairs, feature_names, weights, thres, good_matches_matrix,...
-    sessions, motion, 1:length(spikeInfo),...
+    sessions, Motion, 1:length(spikeInfo),...
     curation_pairs, curation_types, curation_type_names, num_removal, num_merge);
 
 % plot the result
