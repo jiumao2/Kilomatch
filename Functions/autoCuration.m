@@ -319,35 +319,4 @@ end
 hdbscan_matrix_curated = hdbscan_matrix;
 idx_cluster_hdbscan_curated = idx_cluster_hdbscan;
 
-% Plot the final results
-fig = EasyPlot.figure();
-ax_all = EasyPlot.createGridAxes(fig, 1, 2,...
-    'Width', 12,...
-    'Height', 12,...
-    'MarginBottom', 1,...
-    'MarginLeft', 1,...
-    'MarginRight', 0.2);
-
-imagesc(ax_all{1}, hdbscan_matrix_curated(leafOrder,leafOrder));
-imagesc(ax_all{2}, similarity_matrix(leafOrder,leafOrder));
-
-EasyPlot.setCLim(ax_all{2}, [0, 4]);
-EasyPlot.colorbar(ax_all{2},...
-    'label', 'Similarity',...
-    'MarginRight', 1);
-
-EasyPlot.setXLim(ax_all, [0.5, length(leafOrder)+0.5]);
-EasyPlot.setYLim(ax_all, [0.5, length(leafOrder)+0.5]);
-title(ax_all{1}, 'Curated result');
-title(ax_all{2}, 'Similarity matrix');
-
-linkaxes([ax_all{1}, ax_all{2}]);
-
-EasyPlot.cropFigure(fig);
-
-if user_settings.save_figures
-    EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/CuratedResult'));
-end
-
-
 end
