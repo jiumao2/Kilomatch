@@ -318,6 +318,6 @@ EasyPlot.colorbar(ax_colormap{end}, 'label', 'Similarity',...
 
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Overview'), 'dpi', 300);
-EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Overview'), 'type', 'pdf', 'dpi', 300);
+% EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Overview'), 'type', 'pdf', 'dpi', 300);
 
 end

@@ -3,3 +3,5 @@ Paper/
 Results.md
 KilomatchCuration.mlapp
 outputToCsv.m
+site/
+.vscode
