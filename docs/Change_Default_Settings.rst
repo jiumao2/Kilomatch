@@ -5,10 +5,8 @@ Although default settings in Kilomatch are designed to work well for most datase
 
 Here is a list of all the parameters in the ``settings.json`` file and when to change them:
 
-.. toctree:: 
-
-   :maxdepth: 1
-   
+.. contents:: 
+    :local:
 
 ``path_to_data``
 -----------------
