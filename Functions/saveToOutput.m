@@ -35,7 +35,11 @@ Output.CurationNumMerge = num_merge;
 Output.Params = user_settings;
 Output.NumSession = max(sessions);
 Output.Sessions = sessions;
-Output.SessionNames = {spikeInfo.Session};
+
+if isfield(spikeInfo, 'Session')
+    Output.SessionNames = {spikeInfo.Session};
+end
+
 Output.Motion = motion;
 Output.RunTime = toc;
 Output.DateTime = datestr(datetime('now'));
