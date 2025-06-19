@@ -51,8 +51,7 @@
 
     // parameters for curating the clusters
     "autoCuration":{
-        "auto_split": true, // whether to split the clusters automatically
-        "auto_merge": false // whether to merge the clusters automatically
+        "auto_split": true // whether to split the clusters automatically
     }
 }
 
