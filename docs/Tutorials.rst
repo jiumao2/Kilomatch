@@ -62,7 +62,7 @@ Note that it have ``RatName``, ``Session``, and ``Unit`` fields, which are not u
 
 - Copy the ``settings.json`` and ``mainKilomatch.m`` (for single shank) or ``mainKilomatchMultiShank.m`` (for multi shanks) files from the Kilomatch package to your data folder. It can be like:
 
-.. code-block:: dir
+.. code-block::
 
     your_data_folder/
     ├── mainKilomatch.m or mainKilomatchMultiShank.m
@@ -121,7 +121,7 @@ Run the code
 
 Run ``mainKilomatch.m`` or ``mainKilomatchMultiShank.m``. Hopefully, you will get the tracking results in the output folder specified in the ``settings.json`` file. It can be like:
 
-.. code-block:: dir
+.. code-block::
 
     your_data_folder/
     ├── mainKilomatch.m or mainKilomatchMultiShank.m
@@ -139,6 +139,40 @@ Run ``mainKilomatch.m`` or ``mainKilomatchMultiShank.m``. Hopefully, you will ge
         ├── HDBSCAN_settings.json
         └── Figures/
             └── Overview.png
+
+Visualize the results
+-----------------------
+
+.. image:: ./images/Overview.png
+   :width: 100%
+   :align: center
+
+After running the code, you can visualize the results in the ``Figures/Overview.png`` file as shown above. Or you can re-generate the figure by running the following code in MATLAB:
+
+.. code-block:: matlab
+
+    overviewResults(user_settings, Output);
+
+The figure shows the overview of the Kilomatch results, including the unit number / depth across sessions, the estimated probe motion, the similarity score distribution for different features and their weights, the matched probability between sessions, and presence of unique neurons across sessions, and the similarity matrix. The quality of tracking can be easily assessed by reading the figure.
+
+Then, you may want to look into certain clusters. You can run the following code to visualize a cluster:
+
+.. code-block:: matlab
+
+    load kilomatchOutput/Output.mat; % load the output file
+    load kilomatchOutput/spikeInfo.mat; % load the spikeInfo file
+    load kilomatchOutput/Waveforms.mat; % load the waveforms file
+    
+    cluster_id = 1; % specify the cluster ID you want to visualize
+
+    visualizeCluster(Output, cluster_id, spikeInfo, waveforms_corrected, Output.Params)
+
+.. image:: ./images/visualizeCluster.png
+   :width: 100%
+   :align: center
+
+This will generate a figure like the one above, showing the corrected depth, corrected waveforms, autocorrelograms, and PETHs of the units in the specified cluster, with color-coded by session. The similarity between the units in the cluster is also shown. This figure will be saved to ``Figures/Clusters/Cluster<cluster_id>.png``. 
+
 
 Understand the output
 -----------------------
@@ -176,7 +210,6 @@ Field name                      Type                                        Expl
 ``CurationTypes``               1 x n_pairs int                             types of curation for each pair of units
 ``CurationTypeNames``           1 x n_types cell                            names of the curation types
 ``CurationNumRemoval``          1 x 1 int                                   number of pairs removed in the curation step
-``CurationNumMerge``            1 x 1 int                                   number of pairs gained in the curation step
 ===========================     =============================               =================
 
 The most important fields are ``IdxCluster``, which assigns a unique cluster ID for each unit (-1 for non-matched units). You can use it to extract the matched units across sessions. To learn more about the output, please refer to the :doc:`Input and Output <IO>` section.

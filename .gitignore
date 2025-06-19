@@ -5,3 +5,4 @@ KilomatchCuration.mlapp
 outputToCsv.m
 site/
 .vscode
+docs/images/*.ai
