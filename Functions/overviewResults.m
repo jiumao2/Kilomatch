@@ -3,9 +3,9 @@ function overviewResults(user_settings, Output)
 % (2) Motion and matched units' position
 % (3) Similairty distribution
 % (4) 2D scatter of similarity
-% (5) Clustering result (unsorted, sorted)
-% (6) P(matched) vs. delta session
-% (7) Presence of unique neurons
+% (5) P(matched) vs. delta session
+% (6) Presence of unique neurons
+% (7) Similarity matrix
 
 n_session = Output.NumSession;
 n_cluster = Output.NumClusters;
@@ -89,8 +89,8 @@ similarity_matched = cell(1, length(similarity_names));
 similarity_unmatched = cell(1, length(similarity_names));
 
 is_matched = arrayfun(@(x)Output.ClusterMatrix(Output.SimilarityPairs(x,1), Output.SimilarityPairs(x,2)), 1:size(similarity_all,1));
-idx_matched = find(is_matched == 1);
-idx_unmatched = find(is_matched == 0);
+idx_matched = is_matched == 1;
+idx_unmatched = is_matched == 0;
 
 for k = 1:length(similarity_names)
     similarity_matched{k} = similarity_all(idx_matched,k);
@@ -208,13 +208,11 @@ ax_match_colormap = EasyPlot.createAxesAgainstAxes(fig, ax_motion, 'bottom',...
     'MarginBottom', 1,...
     'MarginLeft', 1);
 
-ax_p_matched = EasyPlot.createAxesAgainstAxes(fig, ax_match_colormap, 'right',...
+ax_p_matched = EasyPlot.createAxesAgainstAxes(fig, ax_match_colormap, 'bottom',...
     'Width', 3,...
     'Height', 3,...
     'MarginBottom', 1,...
     'MarginLeft', 1);
-
-EasyPlot.move(ax_p_matched, 'dx', 1.5);
 
 imagesc(ax_match_colormap, p_matched_matrix);
 xlim(ax_match_colormap, [0.5, n_session+0.5]);
@@ -258,11 +256,11 @@ end
 
 assert(size(presence_matrix, 1) == n_unique_units);
 
-ax_presence = EasyPlot.createAxesAgainstAxes(fig, ax_match_colormap, 'bottom',...
-    'Height', 10,...
+ax_presence = EasyPlot.createAxesAgainstAxes(fig, ax_p_matched, 'right',...
+    'Width', 5,...
     'MarginBottom', 1,...
-    'MarginLeft', 1);
-ax_presence.Position(3) = ax_p_matched.Position(1)+ax_p_matched.Position(3)-ax_match_colormap.Position(1);
+    'MarginLeft', 3);
+ax_presence.Position(4) = ax_match_colormap.Position(2)+ax_match_colormap.Position(4)-ax_p_matched.Position(2);
 
 imagesc(ax_presence, 1 - presence_matrix);
 xlim(ax_presence, [0.5, n_session+0.5]);
@@ -272,52 +270,29 @@ xlabel(ax_presence, 'Sessions');
 ylabel(ax_presence, 'Units');
 
 % result 
-ax_colormap = EasyPlot.createGridAxes(fig, 2, 2,...
-    'Width', 7,...
-    'Height', 7,...
-    'MarginTop', 0.2,...
-    'MarginBottom', 0.2,...
-    'MarginLeft', 0.2,...
-    'MarginRight', 0.2);
-EasyPlot.place(ax_colormap, ax_presence, 'right');
-EasyPlot.align(ax_colormap, {ax_match_colormap, ax_p_matched, ax_presence}, 'verticalCenter');
-
-EasyPlot.move(ax_colormap, 'dx', 1.5);
+ax_similarity_matrix = EasyPlot.createAxesAgainstAxes(fig, ax_presence, 'right',...
+    'Width', ax_presence.Position(4),...
+    'Height', ax_presence.Position(4),...
+    'MarginLeft', 2,...
+    'XTickLabelRotation', 0,...
+    'YTickLabelRotation', 0);
 
 [~, idx_sort_session] = sort(sessions*1e8 + locations(:,2)');
 n_unit_cumsum = cumsum(n_units_each_session);
 
-imagesc(ax_colormap{1,1}, 1- Output.ClusterMatrix(idx_sort_session, idx_sort_session));
-imagesc(ax_colormap{1,2}, Output.SimilarityMatrix(idx_sort_session, idx_sort_session));
-imagesc(ax_colormap{2,1}, 1 - Output.ClusterMatrix(Output.IdxSort, Output.IdxSort));
-imagesc(ax_colormap{2,2}, Output.SimilarityMatrix(Output.IdxSort, Output.IdxSort));
+imagesc(ax_similarity_matrix, Output.SimilarityMatrix(idx_sort_session, idx_sort_session));
+EasyPlot.setXLim(ax_similarity_matrix, [0.5, Output.NumUnits+0.5]);
+EasyPlot.setYLim(ax_similarity_matrix, [0.5, Output.NumUnits+0.5]);
+EasyPlot.setXTicksAndLabels(ax_similarity_matrix, n_unit_cumsum, [1, nan(1, n_session-2), n_session]);
+EasyPlot.setYTicksAndLabels(ax_similarity_matrix, n_unit_cumsum, [1, nan(1, n_session-2), n_session]);
 
-EasyPlot.colormap(ax_colormap(:,1), 'gray');
+EasyPlot.colorbar(ax_similarity_matrix, 'label', 'Similarity',...
+    'MarginRight', 1,...
+    'Width', 0.3);
 
-EasyPlot.setXLim(ax_colormap, [0.5, Output.NumUnits+0.5]);
-EasyPlot.setYLim(ax_colormap, [0.5, Output.NumUnits+0.5]);
-
-EasyPlot.setXTicksAndLabels(ax_colormap{1,1}, n_unit_cumsum, '');
-EasyPlot.setYTicksAndLabels(ax_colormap{1,1}, n_unit_cumsum, [1, nan(1, n_session-2), n_session]);
-EasyPlot.setXTicksAndLabels(ax_colormap{1,2}, n_unit_cumsum, '');
-EasyPlot.setYTicksAndLabels(ax_colormap{1,2}, n_unit_cumsum, '');
-
-x_ticks_units = ax_colormap{2,1}.XTick;
-EasyPlot.setXTicksAndLabels(ax_colormap{2,1}, x_ticks_units, x_ticks_units);
-EasyPlot.setYTicksAndLabels(ax_colormap{2,1}, x_ticks_units, '');
-EasyPlot.setXTicksAndLabels(ax_colormap{2,2}, x_ticks_units, '');
-EasyPlot.setYTicksAndLabels(ax_colormap{2,2}, x_ticks_units, '');
-
-EasyPlot.ylabel(ax_colormap{1,1}, 'Sessions');
-EasyPlot.xlabel(ax_colormap{2,1}, 'Units (sorted)');
-title(ax_colormap{1,1}, 'Matches');
-title(ax_colormap{1,2}, 'Similarity');
-
-EasyPlot.colorbar(ax_colormap{end}, 'label', 'Similarity',...
-    'MarginRight', 1);
+xlabel(ax_similarity_matrix, 'Sessions');
 
 EasyPlot.cropFigure(fig);
 EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Overview'), 'dpi', 300);
-% EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Overview'), 'type', 'pdf', 'dpi', 300);
 
 end

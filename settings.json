@@ -4,8 +4,7 @@
     "output_folder": ".\\kilomatchOutput", // output folder
     "path_to_python": "path_to_anaconda\\anaconda3\\envs\\hdbscan\\python.exe", // path to python (3.9+) which has hdbscan installed
     "save_intermediate_results": false, // whether to save the intermediate results
-    "save_figures": false, // whether to save the figures
-    "plot_clusters": false, // whether to plot each cluster
+    "save_intermediate_figures": false, // whether to save the intermediate figures
 
     // parameters for estimating the location of each unit
     "spikeLocation":{

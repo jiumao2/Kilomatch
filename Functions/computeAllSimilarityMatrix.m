@@ -65,7 +65,7 @@ end
 EasyPlot.setYLim(ax_all);
 EasyPlot.cropFigure(fig);
 
-if user_settings.save_figures
+if user_settings.save_intermediate_figures
     EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/AllSimilarity'));
 end
 
