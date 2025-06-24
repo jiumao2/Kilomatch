@@ -278,13 +278,14 @@ ax_similarity_matrix = EasyPlot.createAxesAgainstAxes(fig, ax_presence, 'right',
     'YTickLabelRotation', 0);
 
 [~, idx_sort_session] = sort(sessions*1e8 + locations(:,2)');
-n_unit_cumsum = cumsum(n_units_each_session);
+
+x_ticks = unique(cumsum(n_units_each_session));
 
 imagesc(ax_similarity_matrix, Output.SimilarityMatrix(idx_sort_session, idx_sort_session));
 EasyPlot.setXLim(ax_similarity_matrix, [0.5, Output.NumUnits+0.5]);
 EasyPlot.setYLim(ax_similarity_matrix, [0.5, Output.NumUnits+0.5]);
-EasyPlot.setXTicksAndLabels(ax_similarity_matrix, n_unit_cumsum, [1, nan(1, n_session-2), n_session]);
-EasyPlot.setYTicksAndLabels(ax_similarity_matrix, n_unit_cumsum, [1, nan(1, n_session-2), n_session]);
+EasyPlot.setXTicksAndLabels(ax_similarity_matrix, x_ticks, [1, nan(1, length(x_ticks)-2), n_session]);
+EasyPlot.setYTicksAndLabels(ax_similarity_matrix, x_ticks, [1, nan(1, length(x_ticks)-2), n_session]);
 
 EasyPlot.colorbar(ax_similarity_matrix, 'label', 'Similarity',...
     'MarginRight', 1,...
