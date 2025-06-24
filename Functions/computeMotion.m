@@ -5,8 +5,15 @@ idx_good = find(good_matrix(idx_out) == 1);
 
 fprintf('%d pairs of units are included for drift estimation!\n', length(idx_good));
 
+linear_scale = 1/1000;
 n_session = max(sessions);
 session_pairs = sessions(idx_unit_pairs);
+Motion = struct('Linear', zeros(1, n_session), 'Constant', zeros(1, n_session), 'LinearScale', linear_scale);
+
+if isempty(idx_good)
+    Motion = struct('Linear', zeros(1, n_session), 'Constant', zeros(1, n_session), 'LinearScale', linear_scale);
+    return
+end
 
 % get all the good pairs and their distance
 session_pairs_good = session_pairs(idx_good,:)';
@@ -22,7 +29,6 @@ end
 
 % compute the motion and 95CI
 n_boot = 100;
-linear_scale = 1/1000;
 
 if length(unique(session_pairs_good)) ~= n_session
     disp('Some sessions are not included! Motion estimation failed!');
@@ -30,7 +36,6 @@ end
 
 options = optimset('MaxFunEvals', 1e8, 'MaxIter', 1e8);
 
-Motion = struct('Linear', zeros(1, n_session), 'Constant', zeros(1, n_session), 'LinearScale', linear_scale);
 if user_settings.waveformCorrection.linear_correction
     loss_fun = @(params)lossFunLinearCorrection(params, session_pairs_good, dy, depth, linear_scale, n_session);
     params = fminunc(loss_fun, rand(1, n_session*2-2), options);
@@ -81,7 +86,7 @@ parfor j = 1:n_boot
     depth_this = depth(idx_rand);
 
     if user_settings.waveformCorrection.linear_correction
-        loss_fun = @(params)lossFunLinearCorrection(params, session_pairs_good, dy, depth, linear_scale, n_session);
+        loss_fun = @(params)lossFunLinearCorrection(params, session_pairs_this, dy_this, depth_this, linear_scale, n_session);
         params = fminunc(loss_fun, rand(1, n_session*2-2), options);
         p_linear = [0, params(1:n_session-1)];
         p_constant = [0, params(n_session:end)];
@@ -90,7 +95,7 @@ parfor j = 1:n_boot
         min_motion_boot(j,:) = linear_scale*p_linear*min(depth) + p_constant;
         max_motion_boot(j,:) = linear_scale*p_linear*max(depth) + p_constant;
     else
-        loss_fun = @(params)lossFunLinearDefault(params, session_pairs_good, dy);
+        loss_fun = @(params)lossFunLinearDefault(params, session_pairs_this, dy_this);
         params = fminunc(loss_fun, rand(1, n_session), options);
         mean_motion_boot(j,:) = params - mean(params);
     end
