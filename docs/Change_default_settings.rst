@@ -54,12 +54,14 @@ The number of channels nearest to the peak channel (the channel with maximum amp
 waveformCorrection
 -------------------
 
+.. _waveform_correction_n_nearest_channels_label:
+
 ``n_nearest_channels``
 ++++++++++++++++++++++++
 
 Default: ``38``
 
-The number of channels used for computing pairwise waveform similarity. The default value works well with classical Neuropixels 1.0 and Neuropixels 2.0 channel map. If you want to change the value, ``4*k+2`` is recommended (``k`` is an integer) to ensure the symmetry of the channel set. See :doc:`Similarity calculation <Features>` for more details.  
+The number of channels used for computing pairwise waveform similarity. The default value works well with classical Neuropixels 1.0 and Neuropixels 2.0 channel map. If you want to change the value, ``4*k+2`` is recommended (``k`` is an integer) to ensure the symmetry of the channel set. See :ref:`Waveform similarity <waveform_similarity_label>` for more details.  
 
 ``linear_correction``
 ++++++++++++++++++++++
@@ -67,7 +69,7 @@ The number of channels used for computing pairwise waveform similarity. The defa
 Default: ``false``
 
 Whether to use linear correction for motion estimation. Rigid motion correction is done by default, which is sufficient for most datasets. The non-rigid motion correction can be useful in longer recordings with large probe motion. But it sometimes leads to overfitting and unstable results.
-Please refer to the :doc:`Motion correction <Motion_correction>` section for more details.
+Please refer to the :ref:`Non-rigid correction <non_rigid_correction_label>` section for more details.
 
 ``waveform_similarity``
 
@@ -76,7 +78,9 @@ Please refer to the :doc:`Motion correction <Motion_correction>` section for mor
 
 Default: ``1``
 
-The number of templates (reference probes) used for waveform correction. Should be 1 or 2. If set to 1, the template is set at the mean of motion; if set to 2, two templates are set on the top and bottom of the probes. If set to 2, the waveform correction and waveform similarity calculation will be done twice, which is more accurate but slower. It recommended to use 2 for datasets with large probe motion and many units located at the edges of the probe. See :doc:`Motion correction <Motion_correction>` for more details about this parameter.
+The number of templates (reference probes) used for waveform correction. Should be 1 or 2. If set to 1, the template is set at the mean of motion; if set to 2, two templates are set on the top and bottom of the probes. If set to 2, the waveform correction and waveform similarity calculation will be done twice, which is more accurate but slower. It recommended to use 2 for datasets with large probe motion and many units located at the edges of the probe. See :ref:`Waveform correction <waveform_correction_label>` for more details about this parameter.
+
+.. _autocorr_setting_label:
 
 autocorr
 -------------------
@@ -94,6 +98,8 @@ The window size (in ms) for the autocorrelogram with a bin width of 1 ms.
 Default: ``5``
 
 The standard deviation (in ms) of the Gaussian kernel used for smoothing the autocorrelogram.
+
+.. _ISI_setting_label:
 
 ISI
 -------------------
@@ -127,7 +133,7 @@ motionEstimation
 
 Default: ``100``
 
-The maximum distance (in μm) between unit pairs in the Y direction for motion estimation. Unit pairs with distance larger than this value will not be included for motion estimation. It is designed to exclude distant units which could influence the motion estimation. See :doc:`Motion correction <Motion_correction>` section for more details.
+The maximum distance (in μm) between unit pairs in the Y direction for motion estimation. Unit pairs with distance larger than this value will not be included for motion estimation. It is designed to exclude distant units which could influence the motion estimation. See :ref:`Motion estimation <motion_estimation_label>` section for more details.
 
 ``features``
 +++++++++++++++++++++++
@@ -171,10 +177,12 @@ The number of iterations for the iterative clustering algorithm. The algorithm u
 autoCuration
 -------------------
 
+.. _auto_split_label:
+
 ``auto_split``
 +++++++++++++++++++++++
 
 Default: ``true``
 
-Whether to split the clusters automatically. Please refer to the :doc:`Auto curation <Auto_curation>` section for more details.
+Whether to split the clusters automatically. Please refer to the :ref:`Auto curation <auto_curation_step2_label>` section for more details.
 

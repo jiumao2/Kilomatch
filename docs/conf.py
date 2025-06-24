@@ -6,6 +6,8 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
+
 project = 'Kilomatch'
 copyright = '2025, Yue Huang'
 author = 'Yue Huang'
@@ -13,7 +15,17 @@ author = 'Yue Huang'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = [
+    'sphinx.ext.autosectionlabel',
+    'sphinxcontrib.matlab',
+    'sphinx.ext.autodoc']
+
+primary_domain = "mat"
+
+this_dir = os.path.dirname(os.path.abspath(__file__))
+matlab_src_dir = os.path.abspath(os.path.join(this_dir, '..'))
+matlab_short_links = True
+
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']

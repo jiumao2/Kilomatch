@@ -15,10 +15,8 @@ Welcome to Kilomatch's documentation!
    Motion correction <Motion_correction>
    Clustering <Clustering>
 
-   Feature weighting <Feature_weighting>
    Auto curation <Auto_curation>
    
-   Frequently asked questions (FAQ) <FAQ>
    Input and output (IO) <IO>
    API <API>
 

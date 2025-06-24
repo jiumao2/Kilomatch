@@ -3,6 +3,8 @@ Tutorials
 
 This tutorial provides a step-by-step guide on how to use the Kilomatch package for tracking neurons across sessions. It is designed to help you prepare your data and run the code effectively. You should install Kilomatch correctly before proceeding with this tutorial. If you haven't installed Kilomatch yet, please refer to the :doc:`Installation <Installation>` section.
 
+.. _prepare_the_data_label:
+
 Prepare the data
 -----------------------
 
@@ -140,6 +142,8 @@ Run ``mainKilomatch.m`` or ``mainKilomatchMultiShank.m``. Hopefully, you will ge
         └── Figures/
             └── Overview.png
 
+.. _visualize_the_results_label:
+
 Visualize the results
 -----------------------
 
@@ -173,6 +177,8 @@ Then, you may want to look into certain clusters. You can run the following code
 
 This will generate a figure like the one above, showing the corrected depth, corrected waveforms, autocorrelograms, and PETHs of the units in the specified cluster, with color-coded by session. The similarity between the units in the cluster is also shown. This figure will be saved to ``Figures/Clusters/Cluster<cluster_id>.png``. 
 
+
+.. _output_label:
 
 Understand the output
 -----------------------
