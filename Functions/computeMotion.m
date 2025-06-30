@@ -90,10 +90,13 @@ parfor j = 1:n_boot
         params = fminunc(loss_fun, rand(1, n_session*2-2), options);
         p_linear = [0, params(1:n_session-1)];
         p_constant = [0, params(n_session:end)];
+
+        mean_motion_this = linear_scale*p_linear*mean(depth_this) + p_constant;
+        p_constant = p_constant - mean(mean_motion_this);
     
-        mean_motion_boot(j,:) = linear_scale*p_linear*mean(depth) + p_constant;
-        min_motion_boot(j,:) = linear_scale*p_linear*min(depth) + p_constant;
-        max_motion_boot(j,:) = linear_scale*p_linear*max(depth) + p_constant;
+        mean_motion_boot(j,:) = linear_scale*p_linear*mean(depth_this) + p_constant;
+        min_motion_boot(j,:) = linear_scale*p_linear*min(depth_this) + p_constant;
+        max_motion_boot(j,:) = linear_scale*p_linear*max(depth_this) + p_constant;
     else
         loss_fun = @(params)lossFunLinearDefault(params, session_pairs_this, dy_this);
         params = fminunc(loss_fun, rand(1, n_session), options);
