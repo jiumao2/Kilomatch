@@ -41,7 +41,7 @@ for i_shank = 1:length(shankIDs)
     sessions = [spikeInfoShank.SessionIndex];
     channel_locations = [spikeInfoShank(1).Xcoords, spikeInfoShank(1).Ycoords];
     locations = cat(1, spikeInfoShank.Location);
-    [ISI_features, AutoCorr_features, PETH_features] = getAllFeatures(user_settings, spikeInfoShank);
+    [ISI_features, AutoCorr_features, PETH_features] = getAllFeatures(spikeInfoShank);
     waveforms_all = cat(3, spikeInfoShank.Waveform);
     waveforms_all = permute(waveforms_all, [3,1,2]);
     

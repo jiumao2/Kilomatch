@@ -19,7 +19,7 @@ spikeInfo = preprocessSpikeInfo(user_settings, spikeInfo);
 sessions = [spikeInfo.SessionIndex];
 channel_locations = [spikeInfo(1).Xcoords, spikeInfo(1).Ycoords];
 locations = cat(1, spikeInfo.Location);
-[ISI_features, AutoCorr_features, PETH_features] = getAllFeatures(user_settings, spikeInfo);
+[ISI_features, AutoCorr_features, PETH_features] = getAllFeatures(spikeInfo);
 waveforms_all = cat(3, spikeInfo.Waveform);
 waveforms_all = permute(waveforms_all, [3,1,2]);
 

@@ -1,5 +1,5 @@
-function [ISI_features, AutoCorr_features, PETH_features] = getAllFeatures(user_settings, spikeInfo)
-% Get all features
+function [ISI_features, AutoCorr_features, PETH_features] = getAllFeatures(spikeInfo)
+
 if isfield(spikeInfo, 'ISI')
     ISI_features = cat(1, spikeInfo.ISI);
 else
