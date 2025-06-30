@@ -6,3 +6,4 @@ outputToCsv.m
 site/
 .vscode
 docs/images/*.ai
+docs/images/links

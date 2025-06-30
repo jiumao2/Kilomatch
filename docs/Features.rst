@@ -43,6 +43,8 @@ where :math:`\mathcal{C_i}` indexes of the :math:`n` nearest channels from the p
 
 .
 
+.. _PETH_feature_label:
+
 Peri-event time histogram (PETH)
 -------------------------------------
 
@@ -56,6 +58,8 @@ The PETH features are precomputed during data processing. It is a vector reflect
     \mathbf{S}^{i,j}_{\text{PETH}} = \tanh^{-1}(\operatorname{corrcoef}(\text{PETH}_i, \text{PETH}_j)
 
 .
+
+.. _Autocorrelogram_feature_label:
 
 Autocorrelogram
 -------------------
@@ -99,6 +103,7 @@ How to choose the features
 Different features are not equally informative about the unit identity. We tested the importance of each feature by calculating the AUC (area under the ROC curve) between matched and unmatched pairs. The weights derived from LDA (see :ref:`Clustering <weight_optimization_label>`) also reflected the power of discrimination. 
 In our datasets, the waveform feature played the most important role in tracking neurons, followed by PETH feature. The autocorrelogram feature is the least informative (similar to ISI feature, data not shown). Note that the PETH feature depends on many things such as the task and the brain regions, it is not guarenteed to help tracking neurons. As in this case, the mPFC datasets showed a less powerful PETH feature because their modulation in this task is weaker than the motor cortex. 
 
+.. _weighted_similarity_label:
 
 Weighted similarity
 -----------------------

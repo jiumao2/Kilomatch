@@ -63,6 +63,9 @@ Default: ``38``
 
 The number of channels used for computing pairwise waveform similarity. The default value works well with classical Neuropixels 1.0 and Neuropixels 2.0 channel map. If you want to change the value, ``4*k+2`` is recommended (``k`` is an integer) to ensure the symmetry of the channel set. See :ref:`Waveform similarity <waveform_similarity_label>` for more details.  
 
+
+.. _non_rigid_correction_setting_label:
+
 ``linear_correction``
 ++++++++++++++++++++++
 
@@ -72,6 +75,8 @@ Whether to use linear correction for motion estimation. Rigid motion correction 
 Please refer to the :ref:`Non-rigid correction <non_rigid_correction_label>` section for more details.
 
 ``waveform_similarity``
+
+.. _n_templates_label:
 
 ``n_templates``
 ++++++++++++++++++++++
@@ -135,6 +140,8 @@ Default: ``100``
 
 The maximum distance (in μm) between unit pairs in the Y direction for motion estimation. Unit pairs with distance larger than this value will not be included for motion estimation. It is designed to exclude distant units which could influence the motion estimation. See :ref:`Motion estimation <motion_estimation_label>` section for more details.
 
+.. _motion_correction_features_label:
+
 ``features``
 +++++++++++++++++++++++
 
@@ -165,6 +172,8 @@ The maximum distance (in μm) between unit pairs in the Y direction for weight o
 Default: ``["Waveform", "AutoCorr", "PETH"]``
 
 The features used for clustering. The features should be chosen from "Waveform", "AutoCorr", "ISI" or "PETH". If you want to use only the waveform feature, you can set it to ``["Waveform"]``. If you want to use only the autocorrelogram feature, you can set it to ``["AutoCorr"]``. If you want to use only the ISI feature, you can set it to ``["ISI"]``. If you want to use only the PETH feature, you can set it to ``["PETH"]``.
+
+.. _n_iter_setting_label:
 
 ``n_iter``
 ++++++++++++++++++++++++

@@ -20,6 +20,8 @@ Welcome to Kilomatch's documentation!
    Input and output (IO) <IO>
    API <API>
 
+   Contact us <Contact_us>
+
 
 
 
