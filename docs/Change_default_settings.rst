@@ -97,6 +97,13 @@ Default: ``300``
 
 The window size (in ms) for the autocorrelogram with a bin width of 1 ms. 
 
+``binwidth``
+++++++++++++++++++++++
+
+Default: ``1``
+
+The bin width (in ms) for the autocorrelogram.
+
 ``gaussian_sigma``
 ++++++++++++++++++++++
 

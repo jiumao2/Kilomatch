@@ -67,18 +67,12 @@ if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr')) ||...
     progBar.setup([], [], []);
     
     window = user_settings.autoCorr.window; % ms   
+    binwidth = user_settings.autoCorr.binwidth; % ms   
     sigma = user_settings.autoCorr.gaussian_sigma;
     auto_corr_all = zeros(n_unit, 2*window+1);
     parfor k = 1:n_unit
-        st_this = spike_times{k};
-        st_this = st_this-st_this(1)+1;
-        max_st = round(max(st_this))+1;
-    
-        s = zeros(1, max_st, 'logical');
-        s(round(st_this)) = 1;
-        
-        [auto_corr, lag] = xcorr(s, s, window);
-        auto_corr(lag==0)=0;
+        [auto_corr, lag] = computeAutoCorr(spike_times{k}, window, binwidth);
+
         auto_corr(lag>0) = smoothdata(auto_corr(lag>0), 'gaussian', 5*sigma);
         auto_corr(lag<0) = smoothdata(auto_corr(lag<0), 'gaussian', 5*sigma);
         auto_corr = auto_corr./max(auto_corr);

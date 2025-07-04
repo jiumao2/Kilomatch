@@ -22,6 +22,7 @@
     // autocorrelogram similarity related parameters
     "autoCorr":{
         "window": 300, // ms
+        "binwidth": 1, // ms
         "gaussian_sigma": 5 // ms, for smoothing the autocorrelogram
     },
 
