@@ -4,6 +4,7 @@ function img = exportFigure(fig, filename, varargin)
     figColor = [1,1,1];
     print_renderer = []; % painters or opengl
     printer = []; % print or exportgraphics
+    content_type = [];
     if nargin > 2
         for k = 1:2:size(varargin,2)
             if strcmpi(varargin{k},'type')
@@ -16,6 +17,8 @@ function img = exportFigure(fig, filename, varargin)
                 print_renderer = varargin{k+1};
             elseif strcmpi(varargin{k}, 'printer')
                 printer = varargin{k+1};
+            elseif strcmpi(varargin{k}, 'contentType')
+                content_type = varargin{k+1};
             else
                 error('Unknown argument!')
             end
@@ -42,10 +45,10 @@ function img = exportFigure(fig, filename, varargin)
     end
 
     if isempty(printer)
-        if strcmpi(type, 'pdf')
-            printer = 'exportgraphics';
-        else
+        if strcmpi(type, 'var')
             printer = 'print';
+        else
+            printer = 'exportgraphics';
         end
     end
 
@@ -54,6 +57,14 @@ function img = exportFigure(fig, filename, varargin)
             print_renderer = 'opengl';
         else
             print_renderer = 'painters';
+        end
+    end
+
+    if isempty(content_type)
+        if strcmpi(type, 'pdf') || strcmpi(type, 'eps')
+            content_type = 'vector';
+        else
+            content_type = 'auto';
         end
     end
 
@@ -91,7 +102,8 @@ function img = exportFigure(fig, filename, varargin)
 
         exportgraphics(fig, filename,...
             'BackgroundColor', figColor,...
-            'Resolution', dpi);
+            'Resolution', dpi,...
+            'ContentType', content_type);
 
         img = [];
     end
