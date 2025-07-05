@@ -113,6 +113,15 @@ for i_shank = 1:length(shankIDs)
         similarity_matrix, similarity_all, idx_unit_pairs, feature_names, weights, thres, good_matches_matrix,...
         sessions, Motion, idx_units,...
         curation_pairs, curation_types, curation_type_names, num_removal);
+
+    % save the corrected waveforms
+    save(fullfile(user_settings.output_folder, 'Waveforms.mat'),...
+        'waveforms_corrected', '-nocompression');
+
+    % save the similarity matrix
+    if user_settings.save_intermediate_results
+        save(fullfile(user_settings.output_folder, 'SimilarityMatrix.mat'), 'similarity_matrix_all', 'feature_names_all', '-nocompression');
+    end
     
     % plot the result
     overviewResults(user_settings, Output);

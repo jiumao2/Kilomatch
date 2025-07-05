@@ -93,5 +93,14 @@ Output = saveToOutput(user_settings, spikeInfo,...
     sessions, Motion, 1:length(spikeInfo),...
     curation_pairs, curation_types, curation_type_names, num_removal);
 
+% save the corrected waveforms
+save(fullfile(user_settings.output_folder, 'Waveforms.mat'),...
+    'waveforms_corrected', '-nocompression');
+
+% save the similarity matrix
+if user_settings.save_intermediate_results
+    save(fullfile(user_settings.output_folder, 'SimilarityMatrix.mat'), 'similarity_matrix_all', 'feature_names_all', '-nocompression');
+end
+
 % plot the result
 overviewResults(user_settings, Output);

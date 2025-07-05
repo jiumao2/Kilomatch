@@ -58,8 +58,4 @@ for i_template = 1:n_templates
     progBar.release();
 end
 
-% Save the corrected waveforms
-save(fullfile(user_settings.output_folder, 'Waveforms.mat'),...
-    'waveforms_corrected', '-nocompression');
-
 end
