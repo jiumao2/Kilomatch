@@ -6,7 +6,7 @@ addpath(path_kilomatch);
 addpath(genpath(fullfile(path_kilomatch, 'Functions')));
 
 user_settings = jsonc.jsoncDecode(fileread(path_settings)); % Read the settings
-tic;
+tic_start = tic;
 
 %% Run Kilomatch
 % load the data
@@ -90,7 +90,7 @@ idx_features = cellfun(@(x)find(strcmpi(feature_names_all, x)), feature_names);
 Output = saveToOutput(user_settings, spikeInfo,...
     idx_cluster_hdbscan_curated, hdbscan_matrix_curated, locations, leafOrder, ...
     similarity_matrix, similarity_all, idx_unit_pairs, feature_names, weights, thres, good_matches_matrix,...
-    sessions, Motion, 1:length(spikeInfo),...
+    sessions, Motion, 1:length(spikeInfo), tic_start, ...
     curation_pairs, curation_types, curation_type_names, num_removal);
 
 % save the corrected waveforms

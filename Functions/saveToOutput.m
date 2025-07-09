@@ -1,7 +1,7 @@
 function Output = saveToOutput(user_settings, spikeInfo,...
     idx_clusters, cluster_matrix, locations, leafOrder, ...
     similarity_matrix, similarity_all, idx_unit_pairs, similarity_names, weights, thres, good_matches_matrix,...
-    sessions, Motion, idx_units,...
+    sessions, Motion, idx_units, tic_start, ...
     curation_pairs, curation_types, curation_type_names, num_removal)
 % save the results to Output.mat
 
@@ -41,7 +41,7 @@ if isfield(spikeInfo, 'Session')
     Output.SessionNames = {spikeInfo.Session};
 end
 
-Output.RunTime = toc;
+Output.RunTime = toc(tic_start);
 Output.DateTime = datestr(datetime('now'));
 
 save(fullfile(user_settings.output_folder, 'Output.mat'), 'Output', '-nocompression');
