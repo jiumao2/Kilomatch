@@ -139,6 +139,7 @@ ylabel(ax_similarity, 'Prob.');
 histogram(ax_similarity, similarity, 'BinWidth', 0.2, 'Normalization', 'probability');
 title(ax_similarity, [num2str(length(idx_good)), ' pairs are included']);
 EasyPlot.cropFigure(fig);
+drawnow;
 
 if user_settings.save_intermediate_figures
     EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/SimilarityThresholdForCorrection'), 'dpi', 300);
@@ -194,6 +195,7 @@ xlim(ax_distance, [min(depth), max(depth)]);
 ylim(ax_distance, [min(dy), max(dy)]);
 
 EasyPlot.cropFigure(fig);
+drawnow;
 if user_settings.save_intermediate_figures
     EasyPlot.exportFigure(fig, fullfile(user_settings.output_folder, 'Figures/Motion'));
 end
