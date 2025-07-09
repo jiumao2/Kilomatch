@@ -82,7 +82,7 @@ if user_settings.autoCuration.auto_split
             for i = 1:length(units_this)
                 unit1 = units_this(i);
                 for ii = 1:length(units)
-                    if any(units_this == units(ii))
+                    if idx_sub_clusters(ii) >= 2 && idx_sub_clusters(ii) <= j
                         continue
                     end
                     unit2 = units(ii);
