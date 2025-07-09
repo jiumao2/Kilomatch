@@ -136,8 +136,10 @@ for k = 1:n_unit
 end
 
 % Save the preprocessed data
-fprintf('Saving to %s...\n', fullfile(user_settings.output_folder, 'spikeInfo.mat'));
-save(fullfile(user_settings.output_folder, 'spikeInfo.mat'), 'spikeInfo', '-nocompression');
+if user_settings.save_intermediate_results
+    fprintf('Saving to %s...\n', fullfile(user_settings.output_folder, 'spikeInfo.mat'));
+    save(fullfile(user_settings.output_folder, 'spikeInfo.mat'), 'spikeInfo', '-nocompression');
+end
 
 end
 
