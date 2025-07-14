@@ -6,6 +6,8 @@
     "save_intermediate_results": false, // whether to save the intermediate results
     "save_intermediate_figures": false, // whether to save the intermediate figures
 
+    "centering_waveforms": true, // whether to center the waveforms before processing. If set to true, the waveforms will be centered to the trough of the waveform according to the peak channel.
+
     // parameters for estimating the location of each unit
     "spikeLocation":{
         "location_algorithm": "monopolar_triangulation", // "monopolar_triangulation" or "center_of_mass"
@@ -37,6 +39,7 @@
     "motionEstimation":{
         "max_distance": 100, // um. Unit pairs with distance larger than this value in Y direction will not be included for motion estimation
         "features": [
+            ["AutoCorr", "PETH"],
             ["Waveform", "AutoCorr", "PETH"],
             ["Waveform", "AutoCorr", "PETH"]
         ] // features used for motion estimation each iteration. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
@@ -45,7 +48,7 @@
     // parameters for clustering
     "clustering":{
         "max_distance": 100, // um. Unit pairs with distance larger than this value in Y direction will be considered as different clusters
-        "features": ["Waveform", "AutoCorr", "PETH"], // features used for motion estimation. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
+        "features": ["Waveform", "AutoCorr"], // features used for final clustering. Choose from "Waveform", "AutoCorr", "ISI", "PETH"
         "n_iter": 10 // number of iterations for the clustering algorithm
     },
 

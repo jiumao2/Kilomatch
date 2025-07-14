@@ -25,11 +25,14 @@ n_unit = length(spikeInfo);
 waveforms_all = cat(3, spikeInfo.Waveform);
 waveforms_all = permute(waveforms_all, [3,1,2]);
 
+
 % start parallel pool
 if isempty(gcp('nocreate'))
     parpool();
 end
 disp('Start preprocessing spikeInfo!');
+
+% compute the unit locations
 progBar = ProgressBar(n_unit, ...
     'IsParallel', true, ...
     'Title', 'Compute unit locations', ...
@@ -51,7 +54,57 @@ parfor k = 1:n_unit
 end
 progBar.release();
 
-% Compute spike times related features
+
+% find the peak channels
+peak_channels = zeros(1, n_unit);
+for k = 1:n_unit
+    [~, idx_max] = max(max(squeeze(waveforms_all(k,:,:)), [], 2) - min(squeeze(waveforms_all(k,:,:)), [], 2));
+    peak_channels(k) = idx_max;
+end
+
+
+% centering the waveforms (optional)
+if user_settings.centering_waveforms
+    n_channel = size(waveforms_all, 2);
+    n_sample = size(waveforms_all, 3);
+    center_position = ceil(n_sample/2);
+    waveforms_centered = zeros(n_unit, n_channel, n_sample);
+
+    progBar = ProgressBar(n_unit, ...
+        'Title', 'Centering the waveforms', ...
+        'UpdateRate', 1);
+    
+    for k = 1:n_unit
+        % get the trough positions
+        waveform_peak = squeeze(waveforms_all(k, peak_channels(k), :));
+        [~, idx_min] = min(waveform_peak);
+
+        % compute the delay
+        delay = center_position - idx_min;
+        if delay ~= 0
+            fprintf('Correcting unit %d with delay = %d ...\n', k, delay);
+        end
+
+        % filling the borders with nearest values
+        if delay == 0
+            waveforms_centered(k,:,:) = squeeze(waveforms_all(k,:,:));
+        elseif delay > 0
+            waveforms_centered(k,:,:) = [waveforms_all(k,:,1)'.*ones(n_channel, delay), squeeze(waveforms_all(k,:,1:n_sample-delay))];
+        else
+            waveforms_centered(k,:,:) = [squeeze(waveforms_all(k,:,-delay+1:end)), waveforms_all(k,:,end)'.*ones(n_channel, -delay)];
+        end
+
+        progBar([], [], []);
+    end
+    progBar.release();
+
+    % save the waveforms to spikeInfo
+    for k = 1:n_unit
+        spikeInfo(k).Waveform = squeeze(waveforms_centered(k,:,:));
+    end
+end
+
+% compute spike times related features
 spike_times = cell(1, n_unit);
 for k = 1:n_unit
     spike_times{k} = sort(spikeInfo(k).SpikeTimes);
@@ -112,15 +165,19 @@ if any(strcmpi(user_settings.motionEstimation.features, 'ISI')) ||...
     progBar.release();
 end
 
-% Collect all preprocessed data
+% collect all preprocessed data
 for k = 1:n_unit
     % get the location of each unit
     spikeInfo(k).Location = locations_all(k,:);
     spikeInfo(k).Amplitude = amp_all(k);
-    
-    % compute the peak channel
-    [~, idx_max] = max(max(spikeInfo(k).Waveform, [], 2) - min(spikeInfo(k).Waveform, [], 2));
-    spikeInfo(k).Channel = idx_max;
+
+    % get the peak channels
+    spikeInfo(k).Channel = peak_channels(k);
+
+    % get the centered waveforms
+    if user_settings.centering_waveforms
+        spikeInfo(k).Waveform = squeeze(waveforms_centered(k,:,:));
+    end
 
     % get the autocorrelogram feauture
     if any(strcmpi(user_settings.motionEstimation.features, 'AutoCorr')) ||...
@@ -135,7 +192,7 @@ for k = 1:n_unit
     end
 end
 
-% Save the preprocessed data
+% save the preprocessed data
 if user_settings.save_intermediate_results
     fprintf('Saving to %s...\n', fullfile(user_settings.output_folder, 'spikeInfo.mat'));
     save(fullfile(user_settings.output_folder, 'spikeInfo.mat'), 'spikeInfo', '-nocompression');

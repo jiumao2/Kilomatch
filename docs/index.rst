@@ -10,6 +10,8 @@ Welcome to Kilomatch's documentation!
    Tutorials <Tutorials>
    Change default settings <Change_default_settings>
 
+   Center waveforms <Center_waveforms>
+
    Features <Features>
 
    Motion correction <Motion_correction>
