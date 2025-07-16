@@ -8,7 +8,7 @@ addpath(genpath(fullfile(path_kilomatch, 'Functions')));
 user_settings = jsonc.jsoncDecode(fileread(path_settings)); % Read the settings
 output_folder = user_settings.output_folder;
 path_to_data = user_settings.path_to_data;
-tic;
+tic_start = tic;
 
 %% Run Kilomatch
 % load the data
