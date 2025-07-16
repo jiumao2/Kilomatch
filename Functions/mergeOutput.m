@@ -70,7 +70,9 @@ for i_shank = 1:length(shankIDs)
     Output.CurationNumRemoval = Output.CurationNumRemoval + data.Output.CurationNumRemoval;
 
     Output.Sessions(idx_units) = data.Output.Sessions;
-    Output.SessionNames(idx_units) = data.Output.SessionNames;
+    if isfield(data.Output, 'SessionNames')
+        Output.SessionNames(idx_units) = data.Output.SessionNames;
+    end
     Output.Motion(i_shank) = data.Output.Motion;
 
     Output.RunTime = data.Output.RunTime; % save the run time of the final shank
