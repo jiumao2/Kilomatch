@@ -3,7 +3,7 @@ function [hdbscan_matrix, idx_cluster_hdbscan,...
     user_settings, hdbscan_matrix, idx_cluster_hdbscan, good_matches_matrix, ...
     sessions, similarity_matrix)
 
-curation_type_names = {'Removal_SameSession', 'Removal_LowSimilarity', 'Merge_Cluster', 'Merge_Unit'};
+curation_type_names = {'Removal_SameSession', 'Removal_LowSimilarity'};
 curation_pairs = [];
 curation_types = [];
 
