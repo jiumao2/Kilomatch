@@ -6,7 +6,7 @@
     "save_intermediate_results": false, // whether to save the intermediate results
     "save_intermediate_figures": false, // whether to save the intermediate figures
 
-    "centering_waveforms": true, // whether to center the waveforms before processing. If set to true, the waveforms will be centered to the trough of the waveform according to the peak channel.
+    "centering_waveforms": false, // whether to center the waveforms before processing. If set to true, the waveforms will be centered to the trough of the waveform according to the peak channel.
 
     // parameters for estimating the location of each unit
     "spikeLocation":{

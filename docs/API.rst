@@ -7,6 +7,8 @@ API
 
 .. autofunction:: computeAllSimilarityMatrix
 
+.. autofunction:: computeAutoCorr
+
 .. autofunction:: computeCorrectedWaveforms
 
 .. autofunction:: computeKernel2D
@@ -20,6 +22,12 @@ API
 .. autofunction:: getNearbyPairs
 
 .. autofunction:: graphEditNumber
+
+.. autofunction:: iterativeClustering
+
+.. autofunction:: lossFunLinearCorrection
+
+.. autofunction:: lossFunLinearDefault
 
 .. autofunction:: mergeOutput
 

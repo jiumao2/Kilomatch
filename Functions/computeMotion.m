@@ -1,4 +1,55 @@
 function Motion = computeMotion(user_settings, similarity_matrix, hdbscan_matrix, idx_unit_pairs, similarity_thres, sessions, locations)
+% COMPUTEMOTION  Estimate session‐to‐session probe drift from matched unit pairs.
+%
+% Estimates depth motion across recording sessions by fitting depth‐correction
+% parameters to reliable unit matches and computing confidence intervals.
+% 1. Selects unit pairs exceeding a similarity threshold and sharing cluster membership.
+% 2. Computes raw depth differences (dy) and mean depths for each good pair.
+% 3. Fits either a linear‐correction model or default offset model via optimization.
+% 4. Uses bootstrapping to derive 95% confidence intervals for session‐wise motion.
+% 5. Generates diagnostic plots for similarity threshold and estimated drift.
+%
+% Inputs:
+%   user_settings        struct
+%       .waveformCorrection.linear_correction   logical
+%           Flag to use linear correction model.
+%       .save_intermediate_figures              logical
+%           Flag to export diagnostic figures.
+%       .save_intermediate_results              logical
+%           Flag to save intermediate results to disk.
+%       .output_folder                          char or string
+%           Directory for saving figures and results.
+%
+%   similarity_matrix    double matrix (n_unit × n_unit)
+%       Pairwise similarity values between all units.
+%
+%   hdbscan_matrix       logical matrix (n_unit × n_unit)
+%       Adjacency matrix of final HDBSCAN clusters.
+%
+%   idx_unit_pairs       integer matrix (n_pairs × 2)
+%       Unit‐pair indices evaluated for motion estimation.
+%
+%   similarity_thres     double scalar
+%       Threshold on similarity to select good pairs.
+%
+%   sessions             integer vector (n_unit × 1)
+%       Session index for each unit (1…n_session).
+%
+%   locations            double matrix (n_unit × 2)
+%       X and Y (depth) coordinates of each unit on the probe.
+%
+% Outputs:
+%   Motion               struct with fields:
+%     .Linear            1 × n_session
+%       Fitted linear coefficients per session.
+%     .Constant          1 × n_session
+%       Fitted constant offsets per session.
+%     .LinearScale       double scalar
+%       Global scaling factor applied to linear terms.
+%
+% Date:    20250821  
+% Author:  Yue Huang 
+
 idx_out = sub2ind(size(similarity_matrix), idx_unit_pairs(:,1), idx_unit_pairs(:,2));
 good_matrix = (similarity_matrix > similarity_thres) & (hdbscan_matrix == 1);
 idx_good = find(good_matrix(idx_out) == 1);

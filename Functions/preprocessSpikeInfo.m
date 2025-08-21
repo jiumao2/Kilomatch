@@ -1,5 +1,68 @@
 function spikeInfo = preprocessSpikeInfo(user_settings, spikeInfo)
-% spikeInfo: 1 x n_unit struct
+% PREPROCESSSPIKEINFO  Prepare directories, validate and preprocess spikeInfo structures.
+%
+% This function creates output and figure folders, checks session index continuity,
+% computes 3D unit locations and amplitudes via spikeLocation, identifies peak channels,
+% optionally centers waveforms on their trough, extracts autocorrelogram and ISI features,
+% and saves intermediate spikeInfo to disk when requested.
+%
+% Inputs:
+%   user_settings               struct
+%       .output_folder               char or string
+%           Path for saving results and figures
+%       .spikeLocation.n_nearest_channels  double scalar
+%           Number of channels for localization
+%       .spikeLocation.location_algorithm  char
+%           'center_of_mass' or 'monopolar_triangulation'
+%       .centering_waveforms          logical scalar
+%           Flag to realign waveforms around trough
+%       .motionEstimation.features    cell array of char
+%           Features for motion estimation (e.g., {'AutoCorr', 'Waveform'})
+%       .clustering.features          cell array of char
+%           Features for clustering (e.g., {'AutoCorr', 'Waveform'})
+%       .autoCorr.window              double scalar (ms)
+%           Half‐width of autocorrelogram window
+%       .autoCorr.binwidth            double scalar (ms)
+%           Bin size for autocorrelogram
+%       .autoCorr.gaussian_sigma      double scalar
+%           Gaussian smoothing sigma for autocorrelogram
+%       .ISI.window                   double scalar (ms)
+%           Bin limits for ISI histogram
+%       .ISI.binwidth                 double scalar (ms)
+%           Bin size for ISI histogram
+%       .ISI.gaussian_sigma           double scalar
+%           Gaussian smoothing sigma for ISI histogram
+%       .save_intermediate_results    logical scalar
+%           Flag to save spikeInfo.mat after preprocessing
+%
+%   spikeInfo                   struct array (1 × n_unit)
+%       .SessionIndex             double scalar
+%           Session ID starting at 1 and continuous
+%       .Waveform                  double (n_channel × n_sample)
+%           Raw waveform snippets per unit
+%       .SpikeTimes                double vector
+%           Sorted spike times in ms
+%       .Xcoords, .Ycoords         double vectors (n_channel × 1)
+%           Channel probe coordinates
+%
+% Outputs:
+%   spikeInfo                   struct array (1 × n_unit)
+%       Original fields enriched with:
+%       .Location                 double (1 × 3)
+%           Estimated [x,y,z] spike source coordinates
+%       .Amplitude                double scalar
+%           Peak‐to‐trough amplitude at the max channel
+%       .Channel                  double scalar
+%           Index of the channel with largest peak‐to‐trough
+%       .Waveform                 double (n_channel × n_sample)
+%           Centered waveform if centering_waveforms=true
+%       .AutoCorr                 double vector (1 × (2*window+1))
+%           Normalized autocorrelogram (optional)
+%       .ISI                      double vector (1 × window)
+%           Smoothed ISI distribution (optional)
+%
+% Date:    20250821
+% Author:  Yue Huang
 
 % make a folder to store the data
 if ~exist(fullfile(user_settings.output_folder), 'dir')

@@ -1,8 +1,33 @@
 function [idx_unit_pairs, session_pairs] = getNearbyPairs(max_distance, sessions, locations, Motion)
-% max_distance: 1x1 scalar, um
-% sessions: n_unit x 1 array
-% locations: n_unit x 2 array
-% motion: 1 x n_session array
+% GETNEARBYPairs  Find all pairs of units whose (corrected) depth difference  
+%                 does not exceed a specified threshold.
+%
+% Identifies unit pairs with depth separation ≤ max_distance.  
+% 1. Applies optional motion correction to raw depths.  
+% 2. Computes pairwise absolute differences in corrected depth.  
+% 3. Returns index pairs (i<j) and their corresponding session IDs.
+%
+% Inputs:
+%   max_distance : scalar double
+%       Maximum allowed depth difference in µm.
+%   sessions     : integer vector (n_unit × 1)
+%       Session index for each unit.
+%   locations    : double matrix (n_unit × 2)
+%       X and Y coordinates of each unit (Y = raw depth in µm).
+%   Motion       : struct (optional)
+%       Motion correction parameters with fields:
+%         .LinearScale   scalar
+%         .Linear        vector of length n_session
+%         .Constant      vector of length n_session
+%
+% Outputs:
+%   idx_unit_pairs : integer matrix (n_pairs × 2)
+%       Each row [i, j], i<j, of unit indices within the depth threshold.
+%   session_pairs  : integer matrix (n_pairs × 2)
+%       Corresponding session indices [sessions(i), sessions(j)].
+%
+% Date:    20250821  
+% Author:  Yue Huang  
 
 if nargin < 4
     Motion = [];

@@ -1,4 +1,62 @@
 function Output = mergeOutput(user_settings, spikeInfo, shanks_data, output_folder)
+% MERGEOUTPUT  Combine per‐shank clustering and waveform outputs into one.
+%
+% This function loads the individual shank results saved under
+% output_folder/Shank<ID>/Output.mat and Waveforms.mat, then concatenates
+% cluster assignments, similarity data, curation logs, motion parameters,
+% and corrected waveforms into a single unified Output struct.  The
+% combined Output and waveforms_corrected array are saved back to disk.
+%
+% Inputs:
+%   user_settings            struct
+%       .waveformCorrection.n_templates   integer
+%           Number of templates per unit for waveform correction.
+%       (plus all other fields from user_settings.Params)
+%
+%   spikeInfo                struct array (1×Nunits)
+%       Preprocessed spike data for each unit, with at least:
+%           .SessionIndex       integer scalar
+%           .Waveform           nChannel×nSample matrix
+%
+%   shanks_data              integer vector (1×Nunits)
+%       Shank ID assignment (e.g., [1 1 2 2 3 3 …]) for each spikeInfo unit.
+%
+%   output_folder            char or string
+%       Root directory containing subfolders 'Shank<ID>' with saved results.
+%
+% Outputs:
+%   Output                   struct with fields:
+%       .IdxUnit             1×Nunits  Original unit indices.
+%       .IdxShank            1×Nunits  Shank assignment per unit.
+%       .NumClusters         integer   Total clusters across all shanks.
+%       .NumUnits            integer   Total number of units.
+%       .Locations           Nunits×3   [X,Y,Z] coordinates for each unit.
+%       .IdxSort             1×Nunits  Global sort order for plotting.
+%       .IdxCluster          Nunits×1   Cluster IDs (–1 for unmatched).
+%       .SimilarityMatrix    Nunits×Nunits  Global similarity matrix.
+%       .SimilarityAll       Npairs×nMetrics  Concatenated feature matrix.
+%       .SimilarityPairs     Npairs×2  Global list of unit‐pairs.
+%       .SimilarityNames     cell(1×nMetrics)  Feature names.
+%       .SimilarityWeights   vector    Per‐shank weights concatenated.
+%       .SimilarityThreshold vector    Per‐shank thresholds concatenated.
+%       .GoodMatchesMatrix   Nunits×Nunits  Binary match indicator.
+%       .ClusterMatrix       Nunits×Nunits  Cluster‐membership indicator.
+%       .MatchedPairs        M×2       List of all matched pairs.
+%       .CurationPairs       K×2       List of pairs flagged for curation.
+%       .CurationTypes       1×K       Curation action codes per pair.
+%       .CurationTypeNames   cell      Labels for curation action codes.
+%       .CurationNumRemoval  integer   Total units removed during curation.
+%       .Params              struct    Copy of user_settings.
+%       .NumSession          integer   Number of recording sessions.
+%       .Sessions            1×Nunits  Session index per unit.
+%       .SessionNames        1×Nunits  Session name per unit.
+%       .Motion              struct(1×nShanks)  Motion correction params.
+%       .RunTime             numeric   Runtime (sec) of last shank merge.
+%       .DateTime            char      Timestamp of merge call.
+%
+% Date:    20250821
+% Author:  Yue Huang
+
 n_session = max([spikeInfo.SessionIndex]);
 shankIDs = unique(shanks_data);
 

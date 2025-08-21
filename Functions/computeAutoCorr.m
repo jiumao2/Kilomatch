@@ -1,15 +1,34 @@
 function [auto_corr, lag] = computeAutoCorr(spike_times, window, binwidth)
-% COMPUTEAUTOCORR compute the autocorrelogram using spike times without normalization
+% COMPUTEAUTOCORR  Compute the autocorrelogram using spike times without normalization.
 %
-% spike_times: 1xn double array in ms
-% window: 1x1 double in ms (default: 300)
-% binwidth: 1x1 double in ms (default: 1)
+% computeAutoCorr calculates unnormalized autocorrelation counts by computing
+% time differences between all spike pairs, binning them within ±window
+% milliseconds at a resolution of binwidth. The lag vector spans from
+% –window to +window in steps of binwidth.
 %
-% refer to the elegant Python impletantation from phylib:
+% Inputs:
+%   spike_times      double (1 × n)  
+%       Spike times in milliseconds.
+%
+%   window           double (1 × 1)  
+%       Half‐width of the correlogram window in ms (default: 300).
+%
+%   binwidth         double (1 × 1)  
+%       Bin width for time differences in ms (default: 1).
+%
+% Outputs:
+%   auto_corr        double (1 × (2*window+1))  
+%       Autocorrelation counts for each lag bin.
+%
+%   lag              double (1 × (2*window+1))  
+%       Time lag values in ms corresponding to each bin.
+%
+% Reference:
+%   Adapted from the elegant phylib implementation here:
 %   https://github.com/cortex-lab/phylib/blob/master/phylib/stats/ccg.py#L34
 %
-% Converted to MATLAB by Yue Huang on 20250704
-%
+% Date:    20250704  
+% Author:  Yue Huang
 
 n_bins = floor(window/binwidth)+1;
 auto_corr_right = zeros(1, n_bins); % the right side of auto_corr

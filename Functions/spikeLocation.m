@@ -1,13 +1,50 @@
 function [x, y, z, ptt] = spikeLocation(waveforms_mean, channel_locations, n_nearest_channels, algorithm)
-% waveforms_mean: n_channel x n_sample double
-% channel_locations: n_channel x 2 double
-% n_nearest_channels: 1 x 1 double about how many channels to include
-% algorithm: 'center_of_mass' or 'monopolar_triangulation'
+% SPIKELOCATION  Estimate spike source coordinates from channel waveforms.
 %
-% monopolar_triangulation: refer to Boussard, Julien, Erdem Varol, Hyun Dong Lee, Nishchal Dethe, and Liam Paninski. “Three-Dimensional Spike Localization and Improved Motion Correction for Neuropixels Recordings.” In Advances in Neural Information Processing Systems, 34:22095–105. Curran Associates, Inc., 2021. https://proceedings.neurips.cc/paper/2021/hash/b950ea26ca12daae142bd74dba4427c8-Abstract.html.
-% > https://spikeinterface.readthedocs.io/en/stable/modules/postprocessing.html#spike-locations
-% > https://github.com/SpikeInterface/spikeinterface/blob/main/src/spikeinterface/postprocessing/localization_tools.py#L334
+% This function localizes a neuronal spike by selecting the channels with the
+% largest peak‐to‐trough amplitudes, then computing either a weighted center‐of‐mass
+% in two dimensions or fitting a monopolar triangulation model to infer depth.
 %
+% Inputs:
+%   waveforms_mean       double (n_channel × n_sample)
+%       Mean waveform for each recording channel.
+%
+%   channel_locations    double (n_channel × 2)
+%       [x, y] coordinates of each channel on the probe.
+%
+%   n_nearest_channels   double scalar
+%       Number of channels to include around the largest‐amplitude channel.
+%       Default: 20.
+%
+%   algorithm            char or string
+%       'center_of_mass'       return x,y via weighted average and z = 0;
+%       'monopolar_triangulation'
+%           fit amplitude decay model to estimate (x,y,z) and source amplitude.
+%       Default: 'monopolar_triangulation'.
+%
+% Outputs:
+%   x                    double scalar
+%       Estimated x‐coordinate of the spike source.
+%
+%   y                    double scalar
+%       Estimated y‐coordinate of the spike source.
+%
+%   z                    double scalar
+%       Estimated depth of the spike source (zero for center‐of‐mass).
+%
+%   ptt                  double scalar
+%       Peak‐to‐trough amplitude used for weighting or model fitting.
+%
+% Reference:
+%   Boussard et al., “Three‐Dimensional Spike Localization and Improved Motion
+%   Correction for Neuropixels Recordings,” NeurIPS 2021
+%
+%   See also SpikeInterface localization_tools.py:
+%   https://spikeinterface.readthedocs.io/en/stable/modules/postprocessing.html#spike-locations
+%   https://github.com/SpikeInterface/spikeinterface/blob/main/src/spikeinterface/postprocessing/localization_tools.py#L334
+%
+% Date:    20250821  
+% Author:  Yue Huang
 
 if nargin < 3
     n_nearest_channels = 20;

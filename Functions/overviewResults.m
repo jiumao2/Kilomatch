@@ -1,11 +1,58 @@
 function overviewResults(user_settings, Output)
-% (1) Unit number across sessions (position on the probe)
-% (2) Motion and matched units' position
-% (3) Similairty distribution
-% (4) 2D scatter of similarity
-% (5) P(matched) vs. delta session
-% (6) Presence of unique neurons
-% (7) Similarity matrix
+% OVERVIEWRESULTS  Create an integrated figure summarizing clustering and tracking.
+%
+% This function generates a multi‐panel overview figure that includes:
+%   - Unit count per session plotted against probe depth.
+%   - Motion‐corrected probe positions over sessions.
+%   - Histograms of similarity distributions for matched vs. unmatched pairs.
+%   - 2D scatter plots of pairwise similarity metrics.
+%   - Probability of a match as a function of session lag (Δsession).
+%   - Presence matrix of unique neurons across all sessions.
+%   - Session‐by‐session similarity heatmap.
+%
+% Inputs:
+%   user_settings           struct
+%       .output_folder      char or string
+%           Base folder for saving figures.
+%
+%   Output                  struct
+%       .NumSession         integer
+%           Total number of recording sessions.
+%       .NumClusters        integer
+%           Number of clusters identified.
+%       .NumUnits           integer
+%           Total number of units before merging.
+%       .Sessions           numeric vector (NumUnits × 1)
+%           Session index for each unit.
+%       .Locations          numeric matrix (NumUnits × 2 or 3)
+%           [x,y,(z)] coordinates of each unit on the probe.
+%       .Motion             struct
+%           .LinearScale     numeric scalar
+%               Scale factor applied to linear motion estimate.
+%           .Linear          numeric matrix
+%               Regression coefficients for motion correction.
+%           .Constant        numeric vector
+%               Intercept offsets for each session.
+%       .IdxCluster         integer vector (NumUnits × 1)
+%           Cluster assignment for each unit (–1 for unique/unmatched).
+%       .SimilarityAll      numeric matrix (#pairs × nMetrics)
+%           Raw similarity features for each unit pair.
+%       .SimilarityNames    cell array of char
+%           Names corresponding to columns of SimilarityAll.
+%       .SimilarityWeights  numeric vector
+%           Weights for each similarity metric in the combined score.
+%       .SimilarityThreshold numeric scalar
+%           Threshold on weighted similarity for match classification.
+%       .SimilarityPairs    integer matrix (#pairs × 2)
+%           Row‐pairs of unit indices evaluated in SimilarityAll.
+%       .SimilarityMatrix   numeric matrix (NumUnits × NumUnits)
+%           Full pairwise similarity matrix for all units.
+%
+% Outputs:
+%   A multi‐panel overview figure is saved as:
+%       fullfile(user_settings.output_folder, 'Figures', 'Overview.png')
+%
+% Date:    20250821
 
 n_session = Output.NumSession;
 n_cluster = Output.NumClusters;

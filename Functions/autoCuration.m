@@ -2,6 +2,57 @@ function [hdbscan_matrix, idx_cluster_hdbscan,...
     curation_pairs, curation_types, curation_type_names, num_removal] = autoCuration(...
     user_settings, hdbscan_matrix, idx_cluster_hdbscan, good_matches_matrix, ...
     sessions, similarity_matrix)
+% AUTOCURATION  Automatic curation of HDBSCAN clustering by removing invalid units and splitting clusters.
+%
+% Performs automatic curation of HDBSCAN clustering results.  
+% 1. Removes units from clusters if they originate from the same session 
+% or have similarity below a threshold.  
+% 2. Optionally splits clusters based on connectivity in the good_matches_matrix.  
+% Records every curation action and returns updated cluster assignments, 
+% adjacency matrix, and removal statistics.
+%
+% Inputs:
+%   user_settings               struct  
+%       .autoCuration.auto_split    logical scalar  
+%                                   Flag to enable cluster splitting.
+%
+%   hdbscan_matrix              logical matrix (n_unit × n_unit)  
+%       Initial symmetric adjacency matrix of cluster membership.
+%
+%   idx_cluster_hdbscan         integer vector (n_unit × 1)  
+%       Initial cluster labels for each unit (1…n_cluster, –1 for unassigned).
+%
+%   good_matches_matrix         logical matrix (n_unit × n_unit)  
+%       Symmetric adjacency of reliable matches used for sub‐cluster detection.
+%
+%   sessions                    integer vector (n_unit × 1)  
+%       Session identifiers for each unit, used to detect duplicates.
+%
+%   similarity_matrix           double matrix (n_unit × n_unit)  
+%       Pairwise similarity values between units for filtering low‐similarity units.
+%
+% Outputs:
+%   hdbscan_matrix              logical matrix (n_unit × n_unit)  
+%       Updated adjacency matrix after removals and splits.
+%
+%   idx_cluster_hdbscan         integer vector (n_unit × 1)  
+%       Updated cluster labels for each unit.
+%
+%   curation_pairs              integer matrix (P × 2)  
+%       Each row is a pair of unit indices involved in a curation action.
+%
+%   curation_types              integer vector (1 × P)  
+%       Action type for each pair (1 = removal; 2 = split).
+%
+%   curation_type_names         cell (1 × 2) of char  
+%       Names of action types: {'Removal_SameSession', 'Removal_LowSimilarity'}.
+%
+%   num_removal                 integer scalar  
+%       Total number of unit pairs removals performed.
+%
+% Date:    20250821  
+% Author:  Yue Huang
+
 
 curation_type_names = {'Removal_SameSession', 'Removal_LowSimilarity'};
 curation_pairs = [];

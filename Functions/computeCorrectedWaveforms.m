@@ -1,8 +1,41 @@
 function waveforms_corrected = computeCorrectedWaveforms(user_settings, waveforms_all, channel_locations, sessions, locations, Motion)
-% waveforms_all: n_unit x n_channel x n_sample array
-% channel_locations: n_channel x 2 array
-% sessions: n_unit x 1 array
-% locations: n_unit x 2 array
+% COMPUTECORRECTEDWAVEFORMS  Apply motion‐based correction to waveform templates
+%
+% computeCorrectedWaveforms generates multiple corrected waveform templates for each unit
+% by shifting the waveform extraction depth according to estimated motion parameters.
+% For two templates, one uses the minimum and the other the maximum estimated motion shift.
+%
+% Inputs:
+%   user_settings              struct  
+%       .waveformCorrection.n_templates   integer scalar  
+%           Number of correction templates to compute
+%
+%   waveforms_all              double (n_unit × n_channel × n_sample)  
+%       Raw waveform snippets for each unit, across channels and time samples
+%
+%   channel_locations          double (n_channel × 2)  
+%       X,Y coordinates of each recording channel on the probe
+%
+%   sessions                   integer (n_unit × 1)  
+%       Session index for each unit, used to select the appropriate motion vector
+%
+%   locations                  double (n_unit × 2)  
+%       X,Y coordinates of the peak waveform location for each unit
+%
+%   Motion                     struct  
+%       .LinearScale           double scalar  
+%           Global scaling factor for motion (default: 0.001)  
+%       .Linear                double vector (n_session × 1)  
+%           Per‐session linear coefficients  
+%       .Constant              double vector (n_session × 1)  
+%           Per‐session offset terms
+%
+% Outputs:
+%   waveforms_corrected        double (n_unit × n_channel × n_sample × n_templates)  
+%       Corrected waveform templates for each unit under each motion correction template
+%
+% Date:    20250821  
+% Author:  Yue Huang
 
 n_unit = size(waveforms_all, 1);
 n_channel = size(waveforms_all, 2);

@@ -1,10 +1,62 @@
 function [hdbscan_matrix, idx_cluster_hdbscan, similarity_matrix, similarity_all,...
     weights, thres, good_matches_matrix, leafOrder] = ...
     iterativeClustering(user_settings, path_kilomatch, similarity_matrix_all, feature_names, idx_unit_pairs, sessions)
-% path_kilomatch: path to kilomatch
-% similarity_matrix_all: n_unit x n_unit x n_features array
-% idx_unit_pairs: n_pair x 2 array
-% sessions: n_unit x 1 array
+% ITERATIVECLUSTERING  Iterative HDBSCAN clustering with adaptive feature weighting.
+%
+% Performs iterative HDBSCAN clustering on unit similarity data.
+% - Combines multiple similarity features into a single weighted similarity matrix.
+% - Executes HDBSCAN via a Python wrapper for a fixed number of iterations.
+% - Updates feature weights between iterations using LDA on matched vs. unmatched pairs.
+% - Derives final clusters, similarity threshold, and reliable‐matches adjacency.
+%
+% Inputs:
+%   user_settings             struct
+%       .clustering.n_iter         Number of HDBSCAN–LDA iterations.
+%       .output_folder             Directory to save settings and outputs.
+%       .path_to_python            Path to the Python executable.
+%
+%   path_kilomatch            char
+%       Path to the kilomatch repo containing main_hdbscan.py.
+%
+%   similarity_matrix_all     double (n_unit × n_unit × n_features)
+%       Pairwise similarity values for each feature.
+%
+%   feature_names             cell array of char (1 × n_features)
+%       Names of the similarity features.
+%
+%   idx_unit_pairs            integer (n_pairs × 2)
+%       Unit‐pair indices to extract features from similarity_matrix_all.
+%
+%   sessions                  integer vector (n_unit × 1)
+%       Session index for each unit.
+%
+% Outputs:
+%   hdbscan_matrix            logical (n_unit × n_unit)
+%       Final cluster adjacency after the last iteration.
+%
+%   idx_cluster_hdbscan       integer (n_unit × 1)
+%       Cluster labels for each unit (−1 for noise).
+%
+%   similarity_matrix         double (n_unit × n_unit)
+%       Weighted sum of feature similarities used for clustering.
+%
+%   similarity_all            double (n_pairs × n_features)
+%       Flattened feature matrix for the given idx_unit_pairs.
+%
+%   weights                   double (1 × n_features)
+%       Learned feature weights from the final LDA.
+%
+%   thres                     double scalar
+%       Similarity threshold for defining good matches.
+%
+%   good_matches_matrix       logical (n_unit × n_unit)
+%       Adjacency of unit pairs exceeding the similarity threshold.
+%
+%   leafOrder                 integer vector
+%       Optimal leaf ordering from hierarchical linkage (if requested).
+%
+% Date:    20250821  
+% Author:  Yue Huang  
 
 n_unit = size(similarity_matrix_all, 1);
 n_session = max(sessions);

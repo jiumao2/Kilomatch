@@ -1,8 +1,49 @@
 function visualizeCluster(Output, cluster_id, spikeInfo, waveforms, user_settings)
-% (1) Positions on the probe vs. sessions
-% (2) Overlapped waveforms
-% (3) ISI, AutoCorr, PC, PETH
-% (4) Positions on the 2D scatter
+% VISUALIZECLUSTER  Visualize properties of a single cluster across sessions and features.
+%
+% This function generates a multi‐panel figure for the specified cluster that includes:
+%   (1) probe depth versus session index,
+%   (2) overlapped waveforms arranged by channel positions,
+%   (3) feature traces for ISI, autocorrelation, and PETH,
+%   (4) two‐dimensional scatter and similarity matrices for unit pairs.
+%
+% Inputs:
+%   Output                struct  
+%       IdxCluster         integer (n_units × 1)       cluster label for each unit
+%       Sessions           integer (n_units × 1)       session index for each unit
+%       Motion             struct with fields:
+%           LinearScale    double scalar               global motion scaling factor
+%           Linear         double (n_sessions × 1)     per‐session linear coefficients
+%           Constant       double (n_sessions × 1)     per‐session offset terms
+%       Locations          double (n_units × 2)        [x,y] coordinates of each unit peak
+%       SimilarityPairs    integer (P × 2)             unit index pairs for similarity data
+%       SimilarityAll      double (P × M)              similarity values for each pair and feature
+%       SimilarityNames    cell (1 × M) of char        names of similarity features
+%       SimilarityWeights  double (M × 1)              weights for each similarity feature
+%       SimilarityMatrix   double (n_units × n_units)  combined or weighted similarity matrix
+%
+%   cluster_id            integer scalar               cluster label to visualize
+%
+%   spikeInfo             struct array (n_units × 1)
+%       ISI               double vector                inter‐spike interval features
+%       AutoCorr          double matrix                autocorrelation features
+%       PETH              double matrix                peristimulus time histogram features
+%       Xcoords, Ycoords  double (n_channels × 1)      channel coordinates for waveform layout
+%
+%   waveforms             double (n_units × n_channels × n_samples × n_templates)
+%       waveform snippets for each unit across channels, time samples, and correction templates
+%
+%   user_settings         struct
+%       clustering.max_distance double scalar          maximum spatial distance for waveform alignment
+%       .output_folder               char or string specifying the directory for saved figures  
+%
+% Outputs:
+%   This function does not return variables. It creates and displays a figure summarizing
+%   cluster‐specific depth, waveform, feature, and similarity information.
+%   The figure will be saved to disk.
+%
+% Date:    20250821  
+% Author:  Yue Huang
 
 units = find(Output.IdxCluster == cluster_id);
 sessions = Output.Sessions(units);
