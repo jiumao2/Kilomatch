@@ -94,6 +94,7 @@ Output.SessionNames = cell(1, length(spikeInfo));
 waveforms_corrected = zeros(length(spikeInfo), size(spikeInfo(1).Waveform, 1), size(spikeInfo(1).Waveform, 2), user_settings.waveformCorrection.n_templates);
 
 n_cluster = 0;
+n_units = 0;
 for i_shank = 1:length(shankIDs)
     shankID = shankIDs(i_shank);
 
@@ -103,7 +104,7 @@ for i_shank = 1:length(shankIDs)
     idx_units = find(shanks_data == shankID);
 
     Output.Locations(idx_units, :) = data.Output.Locations;
-    Output.IdxSort(idx_units) = data.Output.IdxSort + n_cluster;
+    Output.IdxSort(n_units+1:n_units+data.Output.NumUnits) = idx_units(data.Output.IdxSort);
 
     Output.IdxCluster(idx_units) = data.Output.IdxCluster + n_cluster;
     Output.IdxCluster(idx_units(data.Output.IdxCluster == -1)) = -1;
@@ -140,6 +141,7 @@ for i_shank = 1:length(shankIDs)
     waveforms_corrected(idx_units,:,:,:) = data_waveforms.waveforms_corrected;
 
     n_cluster = n_cluster + data.Output.NumClusters;
+    n_units = n_units + data.Output.NumUnits;
 end
 
 Output.NumClusters = n_cluster;
