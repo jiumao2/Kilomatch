@@ -161,7 +161,7 @@ overlaps = {...
 
 WaveformSimilarityMatrix = NaN(length(units));
 ISI_SimilarityMatrix = NaN(length(units));
-AutoCorrSimilalrityMatrix = NaN(length(units));
+AutoCorrSimilarityMatrix = NaN(length(units));
 PETH_SimilarityMatrix = NaN(length(units));
 
 for k = 1:size(Output.SimilarityPairs, 1)
@@ -180,8 +180,8 @@ for k = 1:size(Output.SimilarityPairs, 1)
             ISI_SimilarityMatrix(idx1,idx2) = Output.SimilarityAll(k,j);
             ISI_SimilarityMatrix(idx2,idx1) = Output.SimilarityAll(k,j);
         elseif strcmpi(Output.SimilarityNames{j}, 'AutoCorr')
-            AutoCorrSimilalrityMatrix(idx1,idx2) = Output.SimilarityAll(k,j);
-            AutoCorrSimilalrityMatrix(idx2,idx1) = Output.SimilarityAll(k,j);
+            AutoCorrSimilarityMatrix(idx1,idx2) = Output.SimilarityAll(k,j);
+            AutoCorrSimilarityMatrix(idx2,idx1) = Output.SimilarityAll(k,j);
         elseif strcmpi(Output.SimilarityNames{j}, 'PETH')
             PETH_SimilarityMatrix(idx1,idx2) = Output.SimilarityAll(k,j);
             PETH_SimilarityMatrix(idx2,idx1) = Output.SimilarityAll(k,j);
@@ -193,7 +193,7 @@ similarity_matrix = {...
     Output.SimilarityMatrix(units, units),...
     WaveformSimilarityMatrix,...
     ISI_SimilarityMatrix,...
-    AutoCorrSimilalrityMatrix,...
+    AutoCorrSimilarityMatrix,...
     PETH_SimilarityMatrix,...
     };
 
